@@ -1,0 +1,201 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}{{ page_title|default:"Dashboard" }}{% endblock %} · Cedar Grove Admin</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="{% static 'js/theme.js' %}"></script>
+
+  {% block extra_head %}{% endblock %}
+</head>
+
+{# data-role feeds the client-side role gates; data-sidebar is re-set by App.initShell(). #}
+<body class="font-sans" data-role="{{ user_role }}" data-sidebar="expanded">
+
+  {# ------------------------------------------------------------- sidebar #}
+  <div data-backdrop class="fixed inset-0 z-30 bg-slate-900/40 opacity-0 pointer-events-none transition-opacity lg:hidden"></div>
+
+  <aside data-sidebar-el
+         class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col border-r border-slate-200 bg-white
+                transition-[width,transform] duration-200 lg:translate-x-0">
+    <div class="flex h-16 items-center gap-2.5 border-b border-slate-200 px-4">
+      <img src="{% static 'logo.png' %}" alt="Cedar Grove" class="h-9 w-9 shrink-0 rounded-lg object-cover" />
+      <div data-nav-label class="min-w-0">
+        <p class="truncate text-sm font-semibold text-slate-900">Cedar Grove</p>
+        <p class="truncate text-xs text-slate-500">Admin Console</p>
+      </div>
+    </div>
+
+    <nav class="flex-1 space-y-1 overflow-y-auto p-3">
+      {% for item in nav_items %}
+        <a href="{{ item.url }}" data-nav
+           class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+                  {% if item.active %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+          <i data-lucide="{{ item.icon }}"
+             class="h-[18px] w-[18px] shrink-0 {% if item.active %}text-accent-600{% else %}text-slate-400 group-hover:text-slate-600{% endif %}"></i>
+          <span data-nav-label class="truncate">{{ item.label }}</span>
+        </a>
+      {% endfor %}
+    </nav>
+
+    {% if nav_hidden_count %}
+      <div data-nav-label class="mx-3 mb-2 rounded-lg bg-slate-50 p-3">
+        <p class="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+          <i data-lucide="lock" class="h-3.5 w-3.5"></i>
+          {{ nav_hidden_count }} section{{ nav_hidden_count|pluralize }} hidden
+        </p>
+        <p class="mt-1 text-xs leading-relaxed text-slate-500">
+          Your {{ user_role_label|lower }} role limits what you can open.
+        </p>
+      </div>
+    {% endif %}
+
+    <button data-collapse
+            class="m-3 hidden items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900 lg:flex">
+      <span data-collapse-icon class="flex shrink-0"></span>
+      <span data-nav-label>Collapse</span>
+    </button>
+  </aside>
+
+  {# -------------------------------------------------------------- topbar #}
+  <header data-topbar class="fixed inset-x-0 top-0 z-30 h-16 border-b border-slate-200 bg-white/85 backdrop-blur">
+    <div class="flex h-16 items-center gap-3 px-4 sm:px-6">
+      <button data-menu class="grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden">
+        <i data-lucide="menu" class="h-5 w-5"></i>
+      </button>
+
+      <h1 data-page-title class="truncate text-base font-semibold text-slate-900 sm:text-lg">
+        {% block page_title %}{{ page_title|default:"Dashboard" }}{% endblock %}
+      </h1>
+
+      <div class="ml-auto flex items-center gap-1 sm:gap-2">
+        <div class="relative hidden sm:block">
+          <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
+          <input data-global-search type="search" placeholder="Search this page…"
+                 class="w-44 rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-700 outline-none transition
+                        placeholder:text-slate-400 focus:w-64 focus:border-accent-300 focus:bg-white focus:ring-2 focus:ring-accent-100" />
+        </div>
+
+        {# notifications #}
+        <div class="relative">
+          <button data-dropdown-trigger="notifications"
+                  class="relative grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100">
+            <i data-lucide="bell" class="h-5 w-5"></i>
+            {% if notifications %}
+              <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent-600 ring-2 ring-white"></span>
+            {% endif %}
+          </button>
+          <div data-dropdown="notifications"
+               class="fade-in absolute right-0 mt-2 hidden w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+            <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+              <p class="text-sm font-semibold text-slate-900">Notifications</p>
+              <span class="rounded-full bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-700">{{ notifications|length }} new</span>
+            </div>
+            <ul class="max-h-80 divide-y divide-slate-100 overflow-y-auto">
+              {% for n in notifications %}
+                <li class="flex gap-3 px-4 py-3 hover:bg-slate-50">
+                  <span class="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent-50 text-accent-600">
+                    <i data-lucide="{{ n.icon }}" class="h-4 w-4"></i>
+                  </span>
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium text-slate-800">{{ n.title }}</p>
+                    <p class="mt-0.5 text-xs text-slate-500">{{ n.meta }}</p>
+                  </div>
+                </li>
+              {% empty %}
+                <li class="px-4 py-6 text-center text-sm text-slate-400">Nothing new right now.</li>
+              {% endfor %}
+            </ul>
+            <div class="border-t border-slate-100 px-4 py-2.5 text-center">
+              <button class="text-xs font-medium text-accent-700 hover:text-accent-800">Mark all as read</button>
+            </div>
+          </div>
+        </div>
+
+        {# user menu #}
+        <div class="relative">
+          <button data-dropdown-trigger="user" class="flex items-center gap-2 rounded-lg py-1.5 pl-1.5 pr-2 hover:bg-slate-100">
+            <span class="grid h-8 w-8 place-items-center rounded-full bg-accent-600 text-xs font-semibold text-white">{{ user_initials }}</span>
+            <span class="hidden text-left leading-tight sm:block">
+              <span class="block text-sm font-medium text-slate-800">{{ user.get_full_name|default:user.get_username }}</span>
+              <span class="block text-xs capitalize text-slate-500">{{ user_role_label }}</span>
+            </span>
+            <i data-lucide="chevron-down" class="h-4 w-4 text-slate-400"></i>
+          </button>
+          <div data-dropdown="user"
+               class="fade-in absolute right-0 mt-2 hidden w-60 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+            <div class="border-b border-slate-100 px-4 py-3">
+              <p class="truncate text-sm font-medium text-slate-900">{{ user.get_full_name|default:user.get_username }}</p>
+              <p class="truncate text-xs text-slate-500">{{ user.email }}</p>
+              <p class="mt-2">
+                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset {{ user_role_badge }}">
+                  {{ user_role_label }}
+                </span>
+              </p>
+            </div>
+            <div class="p-1.5">
+              <a href="{% block profile_url %}#{% endblock %}"
+                 class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-slate-600 hover:bg-slate-100">
+                <i data-lucide="user-round" class="h-4 w-4 text-slate-400"></i> Profile
+              </a>
+              <a href="{% block settings_url %}#{% endblock %}"
+                 class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-slate-600 hover:bg-slate-100">
+                <i data-lucide="settings" class="h-4 w-4 text-slate-400"></i> Settings
+              </a>
+              {# Django's LogoutView is POST-only since 4.1, so this is a form rather than a link. #}
+              <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit"
+                        class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-rose-600 hover:bg-rose-50">
+                  <i data-lucide="log-out" class="h-4 w-4"></i> Log out
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  {# ---------------------------------------------------------------- main #}
+  <main data-main>
+    {% block main %}
+      <div data-page class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+
+        {% if messages %}
+          <div class="mb-5 space-y-2">
+            {% for message in messages %}
+              <div class="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </div>
+    {% endblock %}
+  </main>
+
+  {# ------------------------------------------------------------- scripts #}
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="{% static 'js/data.js' %}"></script>
+  <script src="{% static 'js/csv.js' %}"></script>
+  <script src="{% static 'js/app.js' %}"></script>
+  <script>
+    /* Relative CSV paths would resolve against the page URL under Django,
+       so point loadData() at the collected static files instead. */
+    App.config.dataBase = "{% get_static_prefix %}data/";
+
+    /* The shell markup is rendered above by Django, so only the behaviour
+       (mobile drawer, collapse, dropdowns, global search) needs wiring. */
+    App.initShell();
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

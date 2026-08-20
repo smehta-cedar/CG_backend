@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Facebook Ads · Cedar Grove Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/theme.js"></script>
+</head>
+<body class="font-sans">
+  <div data-shell></div>
+
+  <main data-main>
+    <div data-page class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 class="text-xl font-semibold tracking-tight text-slate-900">Facebook Ads</h2>
+          <p class="mt-1 text-sm text-slate-500">Ad-level performance — every column from the export, scroll sideways to see them all.</p>
+        </div>
+        <select id="range"
+                class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100">
+          <option value="all" selected>All time</option>
+          <option value="7">Last 7 days</option>
+          <option value="30">Last 30 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
+      </div>
+
+      <div id="notice" class="mt-5 empty:hidden"></div>
+
+      <div id="stats" class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"></div>
+
+      <section class="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h3 class="text-sm font-semibold text-slate-900">Top ads</h3>
+            <p class="mt-0.5 text-sm text-slate-500">The ten highest ads in the current view.</p>
+          </div>
+          <div class="flex gap-1 rounded-lg bg-slate-100 p-1">
+            <button data-metric="Spend" class="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition">Spend</button>
+            <button data-metric="Results" class="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition">Results</button>
+            <button data-metric="Clicks" class="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition">Clicks</button>
+          </div>
+        </div>
+        <div id="chart" class="mt-6 h-64"></div>
+      </section>
+
+      <!-- Filters -->
+      <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="relative flex-1">
+          <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
+          <input id="search" type="search" placeholder="Search ads and ad sets…"
+                 class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-300 focus:ring-2 focus:ring-accent-100" />
+        </div>
+        <div data-filter-wrap>
+          <select id="filter-status" data-filter-label="All statuses"
+                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-44"></select>
+        </div>
+        <div data-filter-wrap>
+          <select id="filter-adset" data-filter-label="All ad sets"
+                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-52"></select>
+        </div>
+        <div class="relative">
+          <button id="columns-btn"
+                  class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">
+            <i data-lucide="columns-3" class="h-4 w-4"></i> Columns
+          </button>
+          <div id="columns-panel" class="fade-in absolute right-0 z-20 mt-2 hidden max-h-72 w-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg"></div>
+        </div>
+        <button id="export"
+                class="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-accent-700">
+          <i data-lucide="download" class="h-4 w-4"></i> Export CSV
+        </button>
+      </div>
+
+      <div id="table" class="mt-4"></div>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/csv.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    App.init({ title: 'Facebook Ads' });
+    App.statsSkeleton('#stats', 4);
+
+    const money = (value) => App.fmt.money(App.toNumber(value));
+    const count = (value) => App.fmt.number(App.toNumber(value));
+
+    // Ads Manager writes "-" for unranked ads and 0 for "never edited".
+    const dash = (value) => {
+      const text = String(value == null ? '' : value).trim();
+      return !text || text === '-' ? '—' : App.escapeHtml(text);
+    };
+
+    const editedAt = (value) => {
+      const text = String(value == null ? '' : value).trim();
+      return !text || text === '0' ? '—' : App.fmt.date(text);
+    };
+
+    // Budget is either a daily amount or the words "Using campaign budget".
+    const budget = (value) => {
+      const n = App.toNumber(value);
+      return n == null ? dash(value) : App.fmt.money(n, 0);
+    };
+
+    const table = App.table({
+      mount: '#table',
+      search: '#search',
+      range: '#range',
+      exportBtn: '#export',
+      exportName: 'facebook-ads.csv',
+      columnsBtn: '#columns-btn',
+      columnsPanel: '#columns-panel',
+      dateColumn: 'Date',
+      filters: [
+        { el: '#filter-status', column: 'Status' },
+        { el: '#filter-adset', column: 'Ad set' },
+      ],
+      maxColumns: Infinity,
+      stickyFirst: true,
+      align: {
+        Spend: 'right', Impressions: 'right', Reach: 'right', Frequency: 'right', Clicks: 'right',
+        CTR: 'right', CPM: 'right', Results: 'right', 'Cost per result': 'right',
+        'Ad set budget': 'right', Bid: 'right', 'Results (initial)': 'right',
+      },
+      cell: {
+        Ad: (value) => `<span class="font-medium text-slate-900">${App.escapeHtml(value)}</span>`,
+        Status: (value) => App.badge(value),
+        Spend: money,
+        'Cost per result': money,
+        CPM: money,
+        Impressions: count,
+        Reach: count,
+        Clicks: count,
+        Results: count,
+        'Results (initial)': count,
+        'Ad set budget': budget,
+        'Ad set budget type': (value) => (String(value).trim() === '0' ? '—' : dash(value)),
+        Frequency: (value) => {
+          const n = App.toNumber(value);
+          return n == null ? '—' : n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+        },
+        CTR: (value) => {
+          const n = App.toNumber(value);
+          return n == null ? '—' : App.fmt.percent(n);
+        },
+        'Result type': (value) => (value ? App.badge(value) : '—'),
+        'Quality ranking': dash,
+        'Engagement rate ranking': dash,
+        'Conversion rate ranking': dash,
+        'Last significant edit': editedAt,
+        Date: (value) => App.fmt.date(value),
+        'Reporting starts': (value) => App.fmt.date(value),
+        'Reporting ends': (value) => App.fmt.date(value),
+      },
+      empty: { title: 'No ads found', message: 'Nothing matches this search, status or ad set.', icon: 'megaphone' },
+      onRender: renderSummary,
+    });
+
+    let chartMetric = 'Spend';
+
+    function columnFor(name) {
+      return table.columns().find((c) => c.toLowerCase() === name.toLowerCase()) || null;
+    }
+
+    function sum(rows, name) {
+      const column = columnFor(name);
+      if (!column) return 0;
+      return rows.reduce((total, row) => total + (App.toNumber(row[column]) || 0), 0);
+    }
+
+    function distinct(rows, name) {
+      const column = columnFor(name);
+      if (!column) return 0;
+      return new Set(rows.map((row) => String(row[column] || '').trim()).filter(Boolean)).size;
+    }
+
+    function countStatus(rows, status) {
+      const column = columnFor('Status');
+      if (!column) return 0;
+      return rows.filter((row) => String(row[column] || '').trim().toLowerCase() === status).length;
+    }
+
+    function renderSummary(rows) {
+      const spend = sum(rows, 'Spend');
+      const results = sum(rows, 'Results');
+      const clicks = sum(rows, 'Clicks');
+      const impressions = sum(rows, 'Impressions');
+
+      const adSets = distinct(rows, 'Ad set');
+      const active = countStatus(rows, 'active');
+      const notDelivering = countStatus(rows, 'not delivering');
+      const inactive = countStatus(rows, 'inactive');
+
+      App.renderStats('#stats', [
+        {
+          label: 'Total spend',
+          value: App.fmt.money(spend, 0),
+          icon: 'wallet',
+          hint: `${App.fmt.number(rows.length)} ads${adSets ? ` · ${App.fmt.number(adSets)} ad sets` : ''}`,
+        },
+        {
+          label: 'Results',
+          value: App.fmt.number(results),
+          icon: 'target',
+          hint: `${App.fmt.money(results ? spend / results : 0)} cost per result`,
+        },
+        {
+          label: 'Link clicks',
+          value: App.fmt.number(clicks),
+          icon: 'mouse-pointer-click',
+          hint: `${App.fmt.percent(impressions ? (clicks / impressions) * 100 : 0)} CTR · ${App.fmt.compact(impressions)} impressions`,
+        },
+        {
+          label: 'Active ads',
+          value: App.fmt.number(active),
+          icon: 'megaphone',
+          hint: `${App.fmt.number(notDelivering)} not delivering · ${App.fmt.number(inactive)} inactive`,
+        },
+      ]);
+
+      const metricColumn = columnFor(chartMetric);
+      const labelColumn = columnFor('Ad') || columnFor('Campaign') || table.columns()[0];
+      if (!metricColumn || !labelColumn) {
+        App.barChart('#chart', []);
+        return;
+      }
+
+      const series = rows
+        .map((row) => ({
+          label: String(row[labelColumn] || '').split(' - ')[0].slice(0, 22),
+          value: App.toNumber(row[metricColumn]) || 0,
+        }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10)
+        .map((item) => Object.assign(item, {
+          display: chartMetric === 'Spend' ? App.fmt.money(item.value, 0) : App.fmt.number(item.value),
+        }));
+
+      App.barChart('#chart', series);
+    }
+
+    function syncMetricButtons() {
+      document.querySelectorAll('[data-metric]').forEach((button) => {
+        const active = button.dataset.metric === chartMetric;
+        button.classList.toggle('bg-white', active);
+        button.classList.toggle('text-slate-900', active);
+        button.classList.toggle('shadow-sm', active);
+      });
+    }
+
+    document.querySelectorAll('[data-metric]').forEach((button) =>
+      button.addEventListener('click', () => {
+        chartMetric = button.dataset.metric;
+        syncMetricButtons();
+        table.refresh();
+      })
+    );
+    syncMetricButtons();
+
+    App.loadData('facebook-ads', { notice: '#notice' }).then((data) => table.setData(data));
+  </script>
+</body>
+</html>

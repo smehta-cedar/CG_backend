@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Appointments · Cedar Grove Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/theme.js"></script>
+</head>
+<body class="font-sans">
+  <div data-shell></div>
+
+  <main data-main>
+    <div data-page class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 class="text-xl font-semibold tracking-tight text-slate-900">Appointments</h2>
+          <p class="mt-1 text-sm text-slate-500">Every column from the booking export — scroll sideways to see them all.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="range"
+                  class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100">
+            <option value="all" selected>All time</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+          <div class="flex gap-1 rounded-lg bg-slate-100 p-1">
+            <button data-view="table" class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition">
+              <i data-lucide="table-2" class="h-4 w-4"></i> Table
+            </button>
+            <button data-view="calendar" class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition">
+              <i data-lucide="calendar-days" class="h-4 w-4"></i> Calendar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="notice" class="mt-5 empty:hidden"></div>
+
+      <div id="stats" class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"></div>
+
+      <!-- Filters -->
+      <div id="filters" class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="relative flex-1">
+          <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
+          <input id="search" type="search" placeholder="Search by name, email or phone…"
+                 class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-300 focus:ring-2 focus:ring-accent-100" />
+        </div>
+        <div data-filter-wrap>
+          <select id="filter-status" data-filter-label="All statuses"
+                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-44"></select>
+        </div>
+        <div data-filter-wrap>
+          <select id="filter-owner" data-filter-label="All owners"
+                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-44"></select>
+        </div>
+        <div data-filter-wrap>
+          <select id="filter-calendar" data-filter-label="All calendars"
+                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-52"></select>
+        </div>
+        <div class="relative">
+          <button id="columns-btn"
+                  class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">
+            <i data-lucide="columns-3" class="h-4 w-4"></i> Columns
+          </button>
+          <div id="columns-panel" class="fade-in absolute right-0 z-20 mt-2 hidden max-h-72 w-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg"></div>
+        </div>
+        <button id="export"
+                class="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-accent-700">
+          <i data-lucide="download" class="h-4 w-4"></i> Export CSV
+        </button>
+      </div>
+
+      <div id="table" class="mt-4"></div>
+
+      <!-- Calendar view -->
+      <section id="calendar" class="mt-4 hidden rounded-xl border border-slate-200 bg-white p-5">
+        <div class="flex items-center justify-between">
+          <h3 id="calendar-title" class="text-sm font-semibold text-slate-900"></h3>
+          <div class="flex items-center gap-1">
+            <button id="cal-prev" class="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50">
+              <i data-lucide="chevron-left" class="h-4 w-4"></i>
+            </button>
+            <button id="cal-today" class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50">Today</button>
+            <button id="cal-next" class="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50">
+              <i data-lucide="chevron-right" class="h-4 w-4"></i>
+            </button>
+          </div>
+        </div>
+        <div class="mt-4 grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200 text-center">
+          <div class="bg-slate-50 py-2 text-2xs font-semibold uppercase tracking-wide text-slate-500">Sun</div>
+          <div class="bg-slate-50 py-2 text-2xs font-semibold uppercase tracking-wide text-slate-500">Mon</div>
+          <div class="bg-slate-50 py-2 text-2xs font-semibold uppercase tracking-wide text-slate-500">Tue</div>
+          <div class="bg-slate-50 py-2 text-2xs font-semibold uppercase tracking-wide text-slate-500">Wed</div>
+          <div class="bg-slate-50 py-2 text-2xs font-semibold uppercase tracking-wide text-slate-500">Thu</div>
+          <div class="bg-slate-50 py-2 text-2xs font-semibold uppercase tracking-wide text-slate-500">Fri</div>
+          <div class="bg-slate-50 py-2 text-2xs font-semibold uppercase tracking-wide text-slate-500">Sat</div>
+        </div>
+        <div id="calendar-grid" class="mt-px grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/csv.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    App.init({ title: 'Appointments' });
+    App.statsSkeleton('#stats', 4);
+
+    let cursor = new Date();
+
+    const yesNo = (value) => {
+      const text = String(value || '').trim();
+      return text ? App.badge(text) : '—';
+    };
+
+    const asEmail = (value) => {
+      const text = String(value || '').trim();
+      return text ? `<a href="mailto:${App.escapeHtml(text)}" class="text-accent-700 hover:underline">${App.escapeHtml(text)}</a>` : '—';
+    };
+
+    const asPhone = (value) => {
+      const digits = String(value || '').replace(/\D/g, '');
+      if (!digits) return '—';
+      const national = digits.length === 11 && digits[0] === '1' ? digits.slice(1) : digits;
+      const display = national.length === 10
+        ? `+1 ${national.slice(0, 3)} ${national.slice(3, 6)} ${national.slice(6)}`
+        : String(value).trim();
+      return `<a href="tel:${App.escapeHtml(digits)}" class="tabular-nums text-slate-700">${App.escapeHtml(display)}</a>`;
+    };
+
+    const table = App.table({
+      mount: '#table',
+      search: '#search',
+      range: '#range',
+      exportBtn: '#export',
+      exportName: 'appointments.csv',
+      columnsBtn: '#columns-btn',
+      columnsPanel: '#columns-panel',
+      dateColumn: 'Date added',
+      filters: [
+        { el: '#filter-status', column: 'Status' },
+        { el: '#filter-owner', column: 'Owner' },
+        { el: '#filter-calendar', column: 'Calendar' },
+      ],
+      maxColumns: Infinity,
+      stickyFirst: true,
+      cell: {
+        Name: (value) => `<span class="font-medium text-slate-900">${App.escapeHtml(value)}</span>`,
+        'Contact name': (value) => `<span class="font-medium text-slate-900">${App.escapeHtml(value)}</span>`,
+        Status: (value) => App.badge(value),
+        Outcome: (value) => App.badge(value),
+        Date: (value) => App.fmt.dateTime(value),
+        'Requested time': (value) => App.fmt.dateTime(value),
+        'Date added': (value) => App.fmt.dateTime(value),
+        Email: asEmail,
+        Phone: asPhone,
+        Rescheduled: yesNo,
+        Mode: yesNo,
+        Source: (value) => (String(value || '').trim() ? App.badge(value) : '—'),
+      },
+      empty: { title: 'No appointments', message: 'Nothing is booked for this filter combination.', icon: 'calendar-x' },
+      onRender: (rows) => {
+        renderSummary(rows);
+        renderCalendar(rows);
+      },
+    });
+
+    function columnFor(pattern) {
+      return table.columns().find((c) => pattern.test(c)) || null;
+    }
+
+    function countStatus(rows, test) {
+      const column = columnFor(/^status$/i) || columnFor(/^outcome$/i);
+      if (!column) return 0;
+      return rows.filter((row) => test(String(row[column] || '').toLowerCase().trim())).length;
+    }
+
+    function renderSummary(rows) {
+      const showed = countStatus(rows, (v) => v === 'showed');
+      const noShow = countStatus(rows, (v) => v === 'no-show' || v === 'no show' || v === 'noshow');
+      const upcoming = countStatus(rows, (v) => v === 'booked' || v === 'scheduled' || v === 'confirmed');
+      const cancelled = countStatus(rows, (v) => v === 'cancelled' || v === 'canceled');
+      const invalid = countStatus(rows, (v) => v === 'invalid');
+      const held = showed + noShow;
+
+      App.renderStats('#stats', [
+        { label: 'Total appointments', value: App.fmt.number(rows.length), delta: 3.2, icon: 'calendar-check', hint: `${App.fmt.number(upcoming)} still upcoming` },
+        { label: 'Show rate', value: App.fmt.percent(held ? (showed / held) * 100 : 0, 0), delta: 5.6, icon: 'circle-check', hint: `${App.fmt.number(showed)} of ${App.fmt.number(held)} held calls` },
+        { label: 'No-shows', value: App.fmt.number(noShow), delta: -4.1, icon: 'user-round-x', hint: 'Follow-up sequence triggered' },
+        { label: 'Cancelled', value: App.fmt.number(cancelled), delta: 1.4, icon: 'circle-x', hint: `${App.fmt.number(invalid)} marked invalid` },
+      ]);
+    }
+
+    /* ------------------------------------------------------------ calendar */
+
+    function renderCalendar(rows) {
+      const dateColumn = columnFor(/^date$/i) || columnFor(/requested time|appointment time|scheduled/i);
+      const nameColumn = columnFor(/name|contact|client/i) || table.columns()[0];
+      const statusColumn = columnFor(/^status$/i);
+
+      const year = cursor.getFullYear();
+      const month = cursor.getMonth();
+      document.getElementById('calendar-title').textContent = cursor.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+      const byDay = {};
+      if (dateColumn) {
+        rows.forEach((row) => {
+          const date = App.toDate(row[dateColumn]);
+          if (!date || date.getFullYear() !== year || date.getMonth() !== month) return;
+          (byDay[date.getDate()] = byDay[date.getDate()] || []).push({
+            name: row[nameColumn],
+            status: statusColumn ? row[statusColumn] : '',
+            time: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+          });
+        });
+      }
+
+      const firstWeekday = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const today = new Date();
+      const cells = [];
+
+      for (let i = 0; i < firstWeekday; i++) cells.push('<div class="min-h-[6.5rem] bg-slate-50/60"></div>');
+
+      const tones = {
+        showed: 'bg-emerald-50 text-emerald-700',
+        booked: 'bg-sky-50 text-sky-700',
+        scheduled: 'bg-sky-50 text-sky-700',
+        confirmed: 'bg-sky-50 text-sky-700',
+        'no-show': 'bg-amber-50 text-amber-800',
+        'no show': 'bg-amber-50 text-amber-800',
+        noshow: 'bg-amber-50 text-amber-800',
+        cancelled: 'bg-rose-50 text-rose-700',
+        canceled: 'bg-rose-50 text-rose-700',
+        invalid: 'bg-slate-100 text-slate-600',
+      };
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const items = byDay[day] || [];
+        const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+        const events = items.slice(0, 3).map((item) => {
+          const tone = tones[String(item.status || '').toLowerCase().trim()] || 'bg-slate-100 text-slate-600';
+          return `<p class="truncate rounded px-1.5 py-0.5 text-2xs font-medium ${tone}" title="${App.escapeHtml(item.time)} · ${App.escapeHtml(item.name)} (${App.escapeHtml(item.status)})">${App.escapeHtml(item.name)}</p>`;
+        }).join('');
+
+        cells.push(`
+          <div class="min-h-[6.5rem] bg-white p-1.5 text-left">
+            <span class="inline-grid h-6 w-6 place-items-center rounded-full text-xs font-medium ${isToday ? 'bg-accent-600 text-white' : 'text-slate-500'}">${day}</span>
+            <div class="mt-1 space-y-1">
+              ${events}
+              ${items.length > 3 ? `<p class="px-1.5 text-2xs text-slate-400">+${items.length - 3} more</p>` : ''}
+            </div>
+          </div>`);
+      }
+
+      while (cells.length % 7 !== 0) cells.push('<div class="min-h-[6.5rem] bg-slate-50/60"></div>');
+      document.getElementById('calendar-grid').innerHTML = cells.join('');
+    }
+
+    document.getElementById('cal-prev').addEventListener('click', () => {
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1);
+      table.refresh();
+    });
+    document.getElementById('cal-next').addEventListener('click', () => {
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+      table.refresh();
+    });
+    document.getElementById('cal-today').addEventListener('click', () => {
+      cursor = new Date();
+      table.refresh();
+    });
+
+    /* --------------------------------------------------------- view toggle */
+
+    function setView(view) {
+      document.getElementById('table').classList.toggle('hidden', view !== 'table');
+      document.getElementById('calendar').classList.toggle('hidden', view !== 'calendar');
+      document.querySelectorAll('[data-view]').forEach((button) => {
+        const active = button.dataset.view === view;
+        button.classList.toggle('bg-white', active);
+        button.classList.toggle('text-slate-900', active);
+        button.classList.toggle('shadow-sm', active);
+      });
+    }
+
+    document.querySelectorAll('[data-view]').forEach((button) =>
+      button.addEventListener('click', () => setView(button.dataset.view))
+    );
+    setView('table');
+
+    App.loadData('appointments', { notice: '#notice' }).then((data) => table.setData(data));
+  </script>
+</body>
+</html>

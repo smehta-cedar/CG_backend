@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Users · Cedar Grove Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/theme.js"></script>
+</head>
+<body class="font-sans">
+  <div data-shell></div>
+
+  <main data-main>
+    <div data-page class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 class="text-xl font-semibold tracking-tight text-slate-900">Users</h2>
+          <p class="mt-1 text-sm text-slate-500">Who can sign in, what they can reach and when they were last active.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="range"
+                  class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100">
+            <option value="all" selected>All time</option>
+            <option value="7">Active last 7 days</option>
+            <option value="30">Active last 30 days</option>
+            <option value="90">Active last 90 days</option>
+          </select>
+          <button id="add-user"
+                  class="inline-flex items-center gap-2 rounded-lg bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-accent-700">
+            <i data-lucide="user-plus" class="h-4 w-4"></i> Add user
+          </button>
+        </div>
+      </div>
+
+      <div id="notice" class="mt-5 empty:hidden"></div>
+
+      <div id="stats" class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"></div>
+
+      <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="relative flex-1">
+          <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
+          <input id="search" type="search" placeholder="Search name or email…"
+                 class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-300 focus:ring-2 focus:ring-accent-100" />
+        </div>
+        <div data-filter-wrap>
+          <select id="filter-role" data-filter-label="All roles"
+                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-44"></select>
+        </div>
+        <div data-filter-wrap>
+          <select id="filter-status" data-filter-label="All statuses"
+                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-44"></select>
+        </div>
+        <button id="export"
+                class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+          <i data-lucide="download" class="h-4 w-4"></i> Export CSV
+        </button>
+      </div>
+
+      <div id="table" class="mt-4"></div>
+
+      <div class="mt-6 grid gap-4 sm:grid-cols-3" id="role-legend"></div>
+    </div>
+  </main>
+
+  <!-- Add / edit modal -->
+  <div id="modal" class="fixed inset-0 z-50 hidden">
+    <div data-modal-backdrop class="absolute inset-0 bg-slate-900/40"></div>
+    <div class="absolute inset-0 grid place-items-center p-4">
+      <div class="fade-in w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+        <div class="flex items-start justify-between border-b border-slate-200 px-5 py-4">
+          <div>
+            <h3 id="modal-title" class="text-base font-semibold text-slate-900">Add user</h3>
+            <p id="modal-subtitle" class="mt-0.5 text-sm text-slate-500">Invite someone to the admin console.</p>
+          </div>
+          <button data-modal-close class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </div>
+
+        <form id="user-form" class="space-y-4 px-5 py-5" novalidate>
+          <div>
+            <label for="u-name" class="mb-1.5 block text-sm font-medium text-slate-700">Full name</label>
+            <input id="u-name" type="text" placeholder="Jane Cooper"
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-100" />
+          </div>
+          <div>
+            <label for="u-email" class="mb-1.5 block text-sm font-medium text-slate-700">Email address</label>
+            <input id="u-email" type="email" placeholder="jane@cedargrove.io"
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-100" />
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="u-role" class="mb-1.5 block text-sm font-medium text-slate-700">Role</label>
+              <select id="u-role"
+                      class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-accent-500 focus:ring-2 focus:ring-accent-100">
+                <option value="admin">Admin</option>
+                <option value="manager">Manager</option>
+                <option value="viewer" selected>Viewer</option>
+              </select>
+            </div>
+            <div>
+              <label for="u-status" class="mb-1.5 block text-sm font-medium text-slate-700">Status</label>
+              <select id="u-status"
+                      class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-accent-500 focus:ring-2 focus:ring-accent-100">
+                <option>Active</option>
+                <option>Invited</option>
+                <option>Suspended</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 pt-1">
+            <button type="button" data-modal-close
+                    class="rounded-lg border border-slate-200 px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">Cancel</button>
+            <button type="submit"
+                    class="rounded-lg bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-accent-700">Save user</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete confirmation -->
+  <div id="delete-modal" class="fixed inset-0 z-50 hidden">
+    <div data-delete-close class="absolute inset-0 bg-slate-900/40"></div>
+    <div class="absolute inset-0 grid place-items-center p-4">
+      <div class="fade-in w-full max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
+        <span class="grid h-11 w-11 place-items-center rounded-full bg-rose-50 text-rose-600">
+          <i data-lucide="trash-2" class="h-5 w-5"></i>
+        </span>
+        <h3 class="mt-3 text-base font-semibold text-slate-900">Delete user</h3>
+        <p class="mt-1 text-sm leading-relaxed text-slate-500">
+          Remove <span id="delete-name" class="font-medium text-slate-700"></span> from the console? They will lose access immediately.
+        </p>
+        <div class="mt-5 flex justify-end gap-2">
+          <button type="button" data-delete-close
+                  class="rounded-lg border border-slate-200 px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">Cancel</button>
+          <button type="button" data-delete-close
+                  class="rounded-lg bg-rose-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">Delete user</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/csv.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    const currentUser = App.init({ title: 'Users' });
+    const isAdmin = currentUser.role === 'admin';
+    App.statsSkeleton('#stats', 4);
+
+    let rows = [];
+
+    const table = App.table({
+      mount: '#table',
+      search: '#search',
+      range: '#range',
+      exportBtn: '#export',
+      exportName: 'users.csv',
+      dateColumn: 'Last Login',
+      filters: [
+        { el: '#filter-role', column: 'Role' },
+        { el: '#filter-status', column: 'Status' },
+      ],
+      columns: ['Name', 'Email', 'Role', 'Status', 'Last Login'],
+      cell: {
+        Name: (value) => `
+          <span class="flex items-center gap-2.5">
+            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent-50 text-xs font-semibold text-accent-700">${App.escapeHtml(App.initials(value))}</span>
+            <span class="font-medium text-slate-900">${App.escapeHtml(value)}</span>
+          </span>`,
+        Email: (value) => `<span class="text-slate-500">${App.escapeHtml(value)}</span>`,
+        Role: (value) => App.badge(value),
+        Status: (value) => App.badge(value),
+        'Last Login': (value) => (value && value !== '—' ? App.fmt.dateTime(value) : '<span class="text-slate-400">Never</span>'),
+      },
+      // Presentation only — Django will wire these up later.
+      actions: isAdmin
+        ? (row) => `
+          <span class="inline-flex items-center gap-1">
+            <button data-edit data-email="${App.escapeHtml(row.Email)}" title="Edit user"
+                    class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
+              <i data-lucide="pencil" class="h-4 w-4"></i>
+            </button>
+            <button data-delete data-name="${App.escapeHtml(row.Name)}" title="Delete user"
+                    class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600">
+              <i data-lucide="trash-2" class="h-4 w-4"></i>
+            </button>
+          </span>`
+        : null,
+      empty: { title: 'No users', message: 'Nobody matches this search or filter.', icon: 'users-round' },
+      onRender: (visibleRows) => {
+        renderSummary(visibleRows);
+        wireRowControls();
+      },
+    });
+
+    function renderSummary(visibleRows) {
+      const count = (test) => visibleRows.filter((row) => test(String(row.Status || '').toLowerCase(), String(row.Role || '').toLowerCase())).length;
+      App.renderStats('#stats', [
+        { label: 'Total users', value: App.fmt.number(visibleRows.length), icon: 'users-round', hint: 'Across all roles' },
+        { label: 'Active', value: App.fmt.number(count((s) => s === 'active')), icon: 'circle-check', hint: 'Can sign in right now' },
+        { label: 'Pending invites', value: App.fmt.number(count((s) => s === 'invited')), icon: 'mail', hint: 'Invitation not accepted' },
+        { label: 'Admins', value: App.fmt.number(count((s, r) => r === 'admin')), icon: 'shield-check', hint: 'Full access accounts' },
+      ]);
+    }
+
+    function wireRowControls() {
+      document.querySelectorAll('#table [data-edit]').forEach((button) =>
+        button.addEventListener('click', () => openModal(rows.find((r) => r.Email === button.dataset.email)))
+      );
+      document.querySelectorAll('#table [data-delete]').forEach((button) =>
+        button.addEventListener('click', () => openDeleteModal(button.dataset.name))
+      );
+    }
+
+    /* ---------------------------------------------------------------- modals
+
+       Visual only. Nothing saves, deletes or validates — the forms are here so
+       the Django views have something to be wired into later. */
+
+    const modal = document.getElementById('modal');
+    const deleteModal = document.getElementById('delete-modal');
+
+    function openModal(row) {
+      const editing = !!row;
+      document.getElementById('modal-title').textContent = editing ? 'Edit user' : 'Add user';
+      document.getElementById('modal-subtitle').textContent = editing
+        ? 'Update this account’s access level.'
+        : 'Invite someone to the admin console.';
+      document.getElementById('u-name').value = editing ? row.Name : '';
+      document.getElementById('u-email').value = editing ? row.Email : '';
+      document.getElementById('u-role').value = editing ? String(row.Role).toLowerCase() : 'viewer';
+      document.getElementById('u-status').value = editing ? row.Status : 'Invited';
+
+      modal.classList.remove('hidden');
+      App.icons();
+      document.getElementById('u-name').focus();
+    }
+
+    function openDeleteModal(name) {
+      document.getElementById('delete-name').textContent = name || 'this user';
+      deleteModal.classList.remove('hidden');
+      App.icons();
+    }
+
+    const closeModal = () => modal.classList.add('hidden');
+    const closeDeleteModal = () => deleteModal.classList.add('hidden');
+
+    document.getElementById('add-user').addEventListener('click', () => openModal(null));
+    document.querySelectorAll('[data-modal-close], [data-modal-backdrop]').forEach((el) => el.addEventListener('click', closeModal));
+    document.querySelectorAll('[data-delete-close]').forEach((el) => el.addEventListener('click', closeDeleteModal));
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      closeModal();
+      closeDeleteModal();
+    });
+
+    document.getElementById('user-form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      closeModal();
+    });
+
+    document.getElementById('role-legend').innerHTML = Object.keys(DB.ROLES)
+      .map((key) => `
+        <div class="rounded-xl border border-slate-200 bg-white p-4">
+          <div class="flex items-center gap-2">${App.badge(DB.ROLES[key].label)}</div>
+          <p class="mt-2 text-sm leading-relaxed text-slate-500">${App.escapeHtml(DB.ROLES[key].description)}</p>
+        </div>`)
+      .join('');
+
+    App.loadData('users', { notice: '#notice' }).then((data) => {
+      rows = data.rows;
+      table.setData(data);
+    });
+
+    App.icons();
+  </script>
+</body>
+</html>

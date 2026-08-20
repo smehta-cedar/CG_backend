@@ -1,0 +1,66 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+
+# Media files (usually user-uploaded)
+media/
+update_copy_ref.html
+
+# Environment variables
+.env
+
+# Virtual environment
+venv/
+.venv/
+env/
+.Python
+pip-selfcheck.json
+
+# Editor/IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.pyc
+*.db
+
+# Ignore compiled languages
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# macOS specific files
+._*
+.Spotlight-V100/
+.Trashes/
+ehthumbs.db
+
+# Windows specific files
+ehthumbs_vista.db
+ehthumbs_win7.db
+
+# Vim swap files
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# VSCode settings
+.vscode/
+passenger_wsgi.py
+

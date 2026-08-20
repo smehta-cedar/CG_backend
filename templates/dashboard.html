@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard · Cedar Grove Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/theme.js"></script>
+</head>
+<body class="font-sans">
+  <div data-shell></div>
+
+  <main data-main>
+    <div data-page class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+
+      <!-- Page header -->
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 class="text-xl font-semibold tracking-tight text-slate-900">Overview</h2>
+          <p class="mt-1 text-sm text-slate-500">One key number from every section, plus what changed most recently.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="range"
+                  class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="all">All time</option>
+          </select>
+          <button id="refresh"
+                  class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">
+            <i data-lucide="refresh-cw" class="h-4 w-4"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <div id="notice" class="mt-5 empty:hidden"></div>
+
+      <!-- Summary cards -->
+      <div id="stats" class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"></div>
+
+      <div class="mt-6 grid gap-6 lg:grid-cols-3">
+
+        <!-- Spend chart (money is manager+) -->
+        <section data-role="admin,manager" data-role-deny="lock"
+                 data-role-message="Spend reporting is limited to admin and manager accounts."
+                 class="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-2">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h3 class="text-sm font-semibold text-slate-900">Spend by ad</h3>
+              <p class="mt-0.5 text-sm text-slate-500">Top spending ads in the selected range.</p>
+            </div>
+            <a href="facebook-ads.html" class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-accent-700 hover:text-accent-800">
+              Details <i data-lucide="arrow-up-right" class="h-4 w-4"></i>
+            </a>
+          </div>
+          <div id="spend-chart" class="mt-6 h-56"></div>
+        </section>
+
+        <!-- Recent activity -->
+        <section class="rounded-xl border border-slate-200 bg-white p-5">
+          <h3 class="text-sm font-semibold text-slate-900">Recent activity</h3>
+          <ul id="activity" class="mt-4 space-y-4"></ul>
+          <button class="mt-5 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">
+            View all activity
+          </button>
+        </section>
+      </div>
+
+      <!-- Section shortcuts -->
+      <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <a href="webinar-registrants.html" class="group rounded-xl border border-slate-200 bg-white p-5 transition hover:border-accent-300">
+          <span class="grid h-9 w-9 place-items-center rounded-lg bg-accent-50 text-accent-600"><i data-lucide="user-round-check" class="h-[18px] w-[18px]"></i></span>
+          <p class="mt-3 text-sm font-semibold text-slate-900">Webinar Registrants</p>
+          <p class="mt-1 text-sm text-slate-500">Signups, sources and attendance.</p>
+          <span class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent-700">Open <i data-lucide="arrow-right" class="h-3.5 w-3.5 transition group-hover:translate-x-0.5"></i></span>
+        </a>
+        <a href="appointments.html" class="group rounded-xl border border-slate-200 bg-white p-5 transition hover:border-accent-300">
+          <span class="grid h-9 w-9 place-items-center rounded-lg bg-accent-50 text-accent-600"><i data-lucide="calendar-check" class="h-[18px] w-[18px]"></i></span>
+          <p class="mt-3 text-sm font-semibold text-slate-900">Appointments</p>
+          <p class="mt-1 text-sm text-slate-500">Booked calls and show rate.</p>
+          <span class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent-700">Open <i data-lucide="arrow-right" class="h-3.5 w-3.5 transition group-hover:translate-x-0.5"></i></span>
+        </a>
+        <a href="facebook-ads.html" data-role="admin,manager" class="group rounded-xl border border-slate-200 bg-white p-5 transition hover:border-accent-300">
+          <span class="grid h-9 w-9 place-items-center rounded-lg bg-accent-50 text-accent-600"><i data-lucide="megaphone" class="h-[18px] w-[18px]"></i></span>
+          <p class="mt-3 text-sm font-semibold text-slate-900">Facebook Ads</p>
+          <p class="mt-1 text-sm text-slate-500">Spend, CTR and cost per lead.</p>
+          <span class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent-700">Open <i data-lucide="arrow-right" class="h-3.5 w-3.5 transition group-hover:translate-x-0.5"></i></span>
+        </a>
+        <a href="twilio.html" data-role="admin,manager" class="group rounded-xl border border-slate-200 bg-white p-5 transition hover:border-accent-300">
+          <span class="grid h-9 w-9 place-items-center rounded-lg bg-accent-50 text-accent-600"><i data-lucide="message-square" class="h-[18px] w-[18px]"></i></span>
+          <p class="mt-3 text-sm font-semibold text-slate-900">Twilio</p>
+          <p class="mt-1 text-sm text-slate-500">Messaging volume and delivery.</p>
+          <span class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent-700">Open <i data-lucide="arrow-right" class="h-3.5 w-3.5 transition group-hover:translate-x-0.5"></i></span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/csv.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    const user = App.init({ title: 'Dashboard' });
+
+    const COLUMN_ALIASES = {
+      spend: ['spend', 'amount spent', 'amount spent (usd)'],
+      leads: ['leads', 'results', 'conversions'],
+      status: ['status', 'campaign delivery', 'delivery status', 'outcome'],
+      attended: ['attended webinar', 'attended', 'attendance'],
+      cost: ['cost', 'price'],
+    };
+
+    function headerKey(name) {
+      return String(name || '')
+        .toLowerCase()
+        .replace(/\s*\([^)]*\)/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    // Finds a column by any of its known aliases so the CSV headers can drift.
+    function findColumn(columns, key) {
+      const aliases = COLUMN_ALIASES[key] || [key];
+      for (let i = 0; i < aliases.length; i++) {
+        const alias = aliases[i];
+        const exact = columns.find((c) => c.toLowerCase().trim() === alias);
+        if (exact) return exact;
+        const fuzzy = columns.find((c) => headerKey(c) === headerKey(alias));
+        if (fuzzy) return fuzzy;
+      }
+      return null;
+    }
+
+    function sumColumn(rows, column) {
+      if (!column) return 0;
+      return rows.reduce((total, row) => total + (App.toNumber(row[column]) || 0), 0);
+    }
+
+    function countWhere(rows, column, predicate) {
+      if (!column) return 0;
+      return rows.filter((row) => predicate(String(row[column] || '').toLowerCase().trim())).length;
+    }
+
+    async function build() {
+      App.statsSkeleton('#stats', 4);
+
+      const [ads, appointments, registrants, twilio] = await Promise.all([
+        App.loadData('facebook-ads'),
+        App.loadData('appointments'),
+        App.loadData('webinar-registrants', { notice: '#notice' }),
+        App.loadData('twilio'),
+      ]);
+
+      const spendColumn = findColumn(ads.columns, 'spend');
+      const leadColumn = findColumn(ads.columns, 'leads');
+      const totalSpend = sumColumn(ads.rows, spendColumn);
+      const totalLeads = sumColumn(ads.rows, leadColumn);
+
+      const apptStatus = findColumn(appointments.columns, 'status');
+      const showed = countWhere(appointments.rows, apptStatus, (v) => v === 'showed');
+      const held = countWhere(appointments.rows, apptStatus, (v) => v === 'showed' || v === 'no-show' || v === 'no show' || v === 'noshow');
+      const showRate = held ? (showed / held) * 100 : 0;
+
+      const attendedColumn = findColumn(registrants.columns, 'attended');
+      const attended = countWhere(registrants.rows, attendedColumn, (v) => v === 'yes' || v === 'true' || v === 'attended');
+      const attendRate = registrants.rows.length ? (attended / registrants.rows.length) * 100 : 0;
+
+      const twilioStatus = findColumn(twilio.columns, 'status');
+      const delivered = countWhere(twilio.rows, twilioStatus, (v) => v === 'delivered' || v === 'received' || v === 'completed');
+      const deliveryRate = twilio.rows.length ? (delivered / twilio.rows.length) * 100 : 0;
+
+      const cards = [
+        { label: 'Ad spend', value: App.fmt.money(totalSpend, 0), delta: 8.4, icon: 'megaphone', hint: `${App.fmt.number(totalLeads)} results · ${App.fmt.money(totalLeads ? totalSpend / totalLeads : 0)} each`, roles: ['admin', 'manager'] },
+        { label: 'Webinar registrants', value: App.fmt.number(registrants.rows.length), delta: 12.1, icon: 'user-round-check', hint: `${App.fmt.percent(attendRate, 1)} attended` },
+        { label: 'Appointments booked', value: App.fmt.number(appointments.rows.length), delta: 3.2, icon: 'calendar-check', hint: `${App.fmt.percent(showRate, 0)} show rate` },
+        { label: 'Messages sent', value: App.fmt.number(twilio.rows.length), delta: -1.8, icon: 'message-square', hint: `${App.fmt.percent(deliveryRate, 1)} delivered`, roles: ['admin', 'manager'] },
+      ].filter((card) => !card.roles || card.roles.includes(user.role));
+
+      App.renderStats('#stats', cards);
+
+      if (spendColumn) {
+        const campaignColumn =
+          ads.columns.find((c) => /^(ad|campaign)$/i.test(c)) ||
+          ads.columns.find((c) => /campaign|name/i.test(c)) ||
+          ads.columns[0];
+        const series = ads.rows
+          .map((row) => ({
+            label: String(row[campaignColumn] || '').split(' - ')[0].slice(0, 14),
+            value: App.toNumber(row[spendColumn]) || 0,
+          }))
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 8)
+          .map((s) => Object.assign(s, { display: App.fmt.money(s.value, 0) }));
+        App.barChart('#spend-chart', series);
+      }
+    }
+
+    document.getElementById('activity').innerHTML = DB.ACTIVITY.map((item) => `
+      <li class="flex gap-3">
+        <span class="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-${item.color}-50 text-${item.color}-600">
+          <i data-lucide="${item.icon}" class="h-4 w-4"></i>
+        </span>
+        <div class="min-w-0">
+          <p class="text-sm leading-snug text-slate-700">${App.escapeHtml(item.title)}</p>
+          <p class="mt-0.5 text-xs text-slate-400">${App.escapeHtml(item.time)}</p>
+        </div>
+      </li>`).join('');
+
+    document.getElementById('refresh').addEventListener('click', build);
+    document.getElementById('range').addEventListener('change', build);
+
+    build().then(App.icons);
+  </script>
+</body>
+</html>

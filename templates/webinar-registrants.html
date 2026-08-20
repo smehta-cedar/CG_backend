@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Webinar Registrants · Cedar Grove Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/theme.js"></script>
+</head>
+<body class="font-sans">
+  <div data-shell></div>
+
+  <main data-main>
+    <div data-page class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 class="text-xl font-semibold tracking-tight text-slate-900">Webinar Registrants</h2>
+          <p class="mt-1 text-sm text-slate-500">Every column from the export — scroll sideways to see them all.</p>
+        </div>
+        <select id="range"
+                class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100">
+          <option value="all" selected>All time</option>
+          <option value="7">Last 7 days</option>
+          <option value="30">Last 30 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
+      </div>
+
+      <div id="notice" class="mt-5 empty:hidden"></div>
+
+      <div id="stats" class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"></div>
+
+      <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="relative flex-1">
+          <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
+          <input id="search" type="search" placeholder="Search name, email or phone…"
+                 class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-300 focus:ring-2 focus:ring-accent-100" />
+        </div>
+        <div data-filter-wrap>
+          <select id="filter-attended" data-filter-label="All attendance"
+                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-44"></select>
+        </div>
+        <div data-filter-wrap>
+          <select id="filter-source" data-filter-label="All sources"
+                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-48"></select>
+        </div>
+        <div class="relative">
+          <button id="columns-btn"
+                  class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">
+            <i data-lucide="columns-3" class="h-4 w-4"></i> Columns
+          </button>
+          <div id="columns-panel" class="fade-in absolute right-0 z-20 mt-2 hidden max-h-72 w-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg"></div>
+        </div>
+        <button id="export"
+                class="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-accent-700">
+          <i data-lucide="download" class="h-4 w-4"></i> Export CSV
+        </button>
+      </div>
+
+      <div id="table" class="mt-4"></div>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/csv.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    App.init({ title: 'Webinar Registrants' });
+    App.statsSkeleton('#stats', 4);
+
+    const yesNo = (value) => {
+      const text = String(value || '').trim();
+      return text ? App.badge(text) : '—';
+    };
+
+    // Sources arrive as full referrer URLs; the hostname is the useful part.
+    const hostOf = (value) => {
+      const text = String(value || '').trim();
+      if (!/^https?:\/\//i.test(text)) return text;
+      try {
+        return new URL(text).hostname.replace(/^(www|m|l)\./, '');
+      } catch (e) {
+        return text;
+      }
+    };
+
+    const asHost = (value) => {
+      const host = hostOf(value);
+      return host ? App.badge(host) : '—';
+    };
+
+    const table = App.table({
+      mount: '#table',
+      search: '#search',
+      range: '#range',
+      exportBtn: '#export',
+      exportName: 'webinar-registrants.csv',
+      columnsBtn: '#columns-btn',
+      columnsPanel: '#columns-panel',
+      dateColumn: 'REGISTRATION DATE',
+      filters: [
+        { el: '#filter-attended', column: 'ATTENDED WEBINAR' },
+        { el: '#filter-source', column: 'SOURCE', format: hostOf },
+      ],
+      // Every column in the file, scrolled horizontally with the first pinned.
+      maxColumns: Infinity,
+      stickyFirst: true,
+      cell: {
+        'FIRST NAME': (value) => `<span class="font-medium text-slate-900">${App.escapeHtml(value)}</span>`,
+        'LAST NAME': (value) => `<span class="font-medium text-slate-900">${App.escapeHtml(value)}</span>`,
+        Name: (value) => `<span class="font-medium text-slate-900">${App.escapeHtml(value)}</span>`,
+        EMAIL: (value) => `<a href="mailto:${App.escapeHtml(value)}" class="text-accent-700 hover:underline">${App.escapeHtml(value)}</a>`,
+        Email: (value) => `<a href="mailto:${App.escapeHtml(value)}" class="text-accent-700 hover:underline">${App.escapeHtml(value)}</a>`,
+        'REGISTRATION DATE': (value) => App.fmt.dateTime(value),
+        'Registration Date': (value) => App.fmt.date(value),
+        SOURCE: asHost,
+        Source: asHost,
+        'ATTENDED WEBINAR': yesNo,
+        'Attended Webinar': yesNo,
+      },
+      empty: { title: 'No registrants', message: 'No signups match this search, source or date range.', icon: 'user-round-search' },
+      onRender: renderSummary,
+    });
+
+    function columnFor(pattern) {
+      return table.columns().find((c) => pattern.test(c)) || null;
+    }
+
+    function renderSummary(rows) {
+      const attendedColumn = columnFor(/attended/i);
+      const sourceColumn = columnFor(/^source$/i);
+      const minutesColumn = columnFor(/total time in webinar/i);
+      const emailColumn = columnFor(/^e-?mail$/i);
+
+      // People sign up for more than one session, so rows > unique people.
+      const unique = emailColumn
+        ? new Set(rows.map((row) => String(row[emailColumn] || '').trim().toLowerCase()).filter(Boolean)).size
+        : rows.length;
+
+      const attended = attendedColumn
+        ? rows.filter((row) => /^(yes|true|attended|y)$/i.test(String(row[attendedColumn] || '').trim())).length
+        : 0;
+
+      const sources = sourceColumn ? new Set(rows.map((row) => String(row[sourceColumn] || '').trim()).filter(Boolean)).size : 0;
+
+      let avgMinutes = 0;
+      if (minutesColumn && attended) {
+        const total = rows.reduce((sum, row) => sum + (App.toNumber(row[minutesColumn]) || 0), 0);
+        avgMinutes = total / attended;
+      }
+
+      App.renderStats('#stats', [
+        { label: 'Registrations', value: App.fmt.number(rows.length), delta: 12.1, icon: 'user-round-check', hint: `${App.fmt.number(unique)} unique people` },
+        { label: 'Attended', value: App.fmt.number(attended), delta: 6.3, icon: 'circle-check', hint: `${App.fmt.percent(rows.length ? (attended / rows.length) * 100 : 0, 1)} of registrants` },
+        { label: 'No-shows', value: App.fmt.number(rows.length - attended), delta: -2.4, icon: 'user-round-x', hint: 'Send the replay link' },
+        { label: 'Avg. watch time', value: avgMinutes ? `${avgMinutes.toFixed(0)} min` : `${sources} sources`, delta: null, icon: 'clock', hint: avgMinutes ? 'Across attendees' : 'Distinct traffic sources' },
+      ]);
+    }
+
+    App.loadData('webinar-registrants', { notice: '#notice' }).then((data) => table.setData(data));
+  </script>
+</body>
+</html>
