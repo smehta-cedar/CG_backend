@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Entry · Cedar Grove Admin</title>
+</head>
+<body>
+  <h1>Sales Entry</h1>
+
+  {# Standalone page on purpose: base.html pulls in Tailwind, and this form is #}
+  {# meant to stay plain HTML. The CSRF token is inside the form so FormData #}
+  {# carries it on the JS POST. #}
+  <form id="sales-form" method="post" action="{% url 'sales' %}" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    <p><label>Last* <input type="text" name="last" required></label></p>
+    <p><label>First* <input type="text" name="first" required></label></p>
+    <p><label>Count* <input type="number" name="count" required></label></p>
+    <p><label>State* <input type="text" name="state" required></label></p>
+    <p><label>Lead Source* <input type="text" name="lead_source" required></label></p>
+    <p><label>Date <input type="date" name="date"></label></p>
+    <p><label>Effective Date <input type="date" name="effective_date"></label></p>
+    <p><label>AOR <input type="text" name="aor"></label></p>
+    <p><label>Previous <input type="text" name="previous"></label></p>
+    <p><label>Product <input type="text" name="product"></label></p>
+    <p><label>Company <input type="text" name="company"></label></p>
+    <p><label>Premium <input type="text" name="premium"></label></p>
+    <p><label>Comm <input type="text" name="comm"></label></p>
+    <p><label>Comm 694 <input type="text" name="comm_694"></label></p>
+    <p><label>DNSP <input type="text" name="dnsp"></label></p>
+    <p><label>Agent <input type="text" name="agent"></label></p>
+    <p><label>Calendar <input type="text" name="calendar"></label></p>
+    <p>
+      <label>Luke/Michael
+        <select name="luke_michael">
+          <option value="Luke">Luke</option>
+          <option value="Michael">Michael</option>
+        </select>
+      </label>
+    </p>
+
+    <p><label>Files <input type="file" name="files" multiple></label></p>
+
+    <p><button type="submit">Submit</button></p>
+  </form>
+
+  <p id="sales-message" role="status"></p>
+
+  <script>
+    (function () {
+      var form = document.getElementById("sales-form");
+      var message = document.getElementById("sales-message");
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        message.textContent = "";
+
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          return;
+        }
+
+        fetch(form.action, {
+          method: "POST",
+          body: new FormData(form),
+          credentials: "same-origin",
+        })
+          .then(function (response) {
+            if (response.ok) {
+              message.textContent = "Sale submitted.";
+              form.reset();
+            } else {
+              message.textContent = "Submission failed (" + response.status + ").";
+            }
+          })
+          .catch(function () {
+            message.textContent = "Submission failed. Check your connection and try again.";
+          });
+      });
+    })();
+  </script>
+</body>
+</html>

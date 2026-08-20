@@ -14,6 +14,7 @@ urlpatterns = [
     path("users/<int:pk>/edit/", views.UserEditView.as_view(), name="user_edit"),
     path("users/<int:pk>/delete/", views.UserDeleteView.as_view(), name="user_delete"),
     path("appointments/", views.AppointmentsView.as_view(), name="appointments"),
+    path("sales/", views.SalesView.as_view(), name="sales"),
     path("facebook-ads/", views.FacebookAdsView.as_view(), name="facebook_ads"),
     path("webinar-registrants/", views.WebinarRegistrantsView.as_view(), name="webinar_registrants"),
     path("twilio/", views.TwilioView.as_view(), name="twilio"),

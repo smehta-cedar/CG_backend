@@ -217,3 +217,36 @@ class UserViewsHappyPathTests(AccountsTestCase):
         response = self.client.get(reverse("user_delete", args=[self.user.pk]))
         self.assertEqual(response.status_code, 200)
         self.assertTrue(User.objects.filter(pk=self.user.pk).exists())
+
+
+# --- Sales entry form ---
+
+
+class SalesViewTests(AccountsTestCase):
+    REQUIRED = {"last": "Doe", "first": "Jane", "count": "1", "state": "TX", "lead_source": "Web"}
+
+    def test_anonymous_is_redirected_to_login(self):
+        response = self.client.get(reverse("sales"))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("login"), response.url)
+
+    def test_get_renders_form(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("sales"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "sales.html")
+        for name in ("last", "first", "count", "state", "lead_source", "luke_michael", "files"):
+            self.assertContains(response, f'name="{name}"')
+
+    def test_post_with_required_fields_succeeds(self):
+        self.client.force_login(self.user)
+        response = self.client.post(reverse("sales"), self.REQUIRED)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"ok": True})
+
+    def test_post_missing_required_field_is_rejected(self):
+        self.client.force_login(self.user)
+        data = {**self.REQUIRED, "state": ""}
+        response = self.client.post(reverse("sales"), data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["missing"], ["state"])

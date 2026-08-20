@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic import TemplateView
@@ -173,6 +174,23 @@ class AppointmentsView(LoginRequiredMixin, TemplateView):
     static placeholder table. Role gating and the queryset land with CRUD."""
 
     template_name = "appointments.html"
+
+
+class SalesView(LoginRequiredMixin, View):
+    """Static sales entry form. GET renders the form; POST acknowledges the
+    submission with JSON so the page's fetch() can show success/error.
+    Nothing is stored yet — there is no Sale model and no upload handling."""
+
+    required_fields = ("last", "first", "count", "state", "lead_source")
+
+    def get(self, request):
+        return render(request, "sales.html")
+
+    def post(self, request):
+        missing = [f for f in self.required_fields if not request.POST.get(f, "").strip()]
+        if missing:
+            return JsonResponse({"ok": False, "missing": missing}, status=400)
+        return JsonResponse({"ok": True})
 
 
 class FacebookAdsView(LoginRequiredMixin, TemplateView):
