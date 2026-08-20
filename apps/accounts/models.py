@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.utils import timezone
@@ -55,3 +56,30 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+
+class OTPToken(models.Model):
+    """A single-use sign-in code emailed to a user.
+
+    Plain data only — issuing, expiry and attempt rules live in
+    ``accounts.services`` so the views and the model both stay thin.
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="otp_tokens",
+    )
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+    attempts = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "OTP token"
+        verbose_name_plural = "OTP tokens"
+        ordering = ("-created_at",)
+        indexes = [models.Index(fields=("user", "is_used", "-created_at"))]
+
+    def __str__(self):
+        return f"{self.user.email} · {self.code}"

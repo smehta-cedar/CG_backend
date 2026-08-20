@@ -84,6 +84,14 @@ python manage.py runserver
 
 The app is available at [http://127.0.0.1:8000/](http://127.0.0.1:8000/). Admin is at [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/).
 
+## CSS (Tailwind)
+
+Rebuild on template changes with the Tailwind standalone CLI (no npm):
+
+```bash
+tailwindcss -i static/src/input.css -o static/css/tailwind.css --watch
+```
+
 ## Project layout
 
 ```
