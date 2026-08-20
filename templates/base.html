@@ -114,6 +114,15 @@
         <span data-nav-label class="truncate">Appointments</span>
       </a>
 
+      {# Sales — every role #}
+      <a href="{% url 'sales' %}" data-nav
+         class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+                {% if request.resolver_match.url_name == 'sales' %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+        <i data-lucide="circle-dollar-sign"
+           class="h-[18px] w-[18px] shrink-0 {% if request.resolver_match.url_name == 'sales' %}text-accent-600{% else %}text-slate-400 group-hover:text-slate-600{% endif %}"></i>
+        <span data-nav-label class="truncate">Sales</span>
+      </a>
+
       {# Facebook Ads — spend data, so ADMIN and up #}
       {% if user.role == 'ADMIN' or user.role == 'SUPERADMIN' %}
         <a href="{% url 'facebook_ads' %}" data-nav

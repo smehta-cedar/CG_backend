@@ -6,6 +6,7 @@ reach a page) and the wiring (a valid POST really reaches the service).
 """
 
 from django.contrib.auth import authenticate
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
@@ -223,7 +224,17 @@ class UserViewsHappyPathTests(AccountsTestCase):
 
 
 class SalesViewTests(AccountsTestCase):
-    REQUIRED = {"last": "Doe", "first": "Jane", "count": "1", "state": "TX", "lead_source": "Web"}
+    REQUIRED = {
+        "last": "Doe",
+        "first": "Jane",
+        "state": "TX",
+        "effective_date": "2026-01-15",
+        "product": "MAPD",
+        "company": "HUMANA",
+    }
+
+    def _pdf(self, name="ancillary.pdf"):
+        return SimpleUploadedFile(name, b"%PDF-1.4 test", content_type="application/pdf")
 
     def test_anonymous_is_redirected_to_login(self):
         response = self.client.get(reverse("sales"))
@@ -235,18 +246,37 @@ class SalesViewTests(AccountsTestCase):
         response = self.client.get(reverse("sales"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "sales.html")
-        for name in ("last", "first", "count", "state", "lead_source", "luke_michael", "files"):
+        for name in (
+            "last", "first", "count", "state", "lead_source", "effective_date",
+            "product", "company", "aor", "dnsp", "calendar",
+            "ancillary_pdf", "additional_files",
+        ):
             self.assertContains(response, f'name="{name}"')
+        self.assertContains(response, 'value="1"')
+        self.assertContains(response, "WEBINAR")
+        self.assertContains(response, "MAPD")
+        self.assertContains(response, "HEALTHSRPING")
+        self.assertContains(response, ">TX<")
+        self.assertContains(response, "PERSONAL")
 
     def test_post_with_required_fields_succeeds(self):
         self.client.force_login(self.user)
-        response = self.client.post(reverse("sales"), self.REQUIRED)
+        response = self.client.post(
+            reverse("sales"),
+            {**self.REQUIRED, "ancillary_pdf": self._pdf()},
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"ok": True})
 
     def test_post_missing_required_field_is_rejected(self):
         self.client.force_login(self.user)
-        data = {**self.REQUIRED, "state": ""}
+        data = {**self.REQUIRED, "state": "", "ancillary_pdf": self._pdf()}
         response = self.client.post(reverse("sales"), data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()["missing"], ["state"])
+
+    def test_post_missing_ancillary_pdf_is_rejected(self):
+        self.client.force_login(self.user)
+        response = self.client.post(reverse("sales"), self.REQUIRED)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["missing"], ["ancillary_pdf"])

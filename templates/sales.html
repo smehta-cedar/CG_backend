@@ -1,65 +1,520 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sales Entry · Cedar Grove Admin</title>
-</head>
-<body>
-  <h1>Sales Entry</h1>
+{% extends "base.html" %}
 
-  {# Standalone page on purpose: base.html pulls in Tailwind, and this form is #}
-  {# meant to stay plain HTML. The CSRF token is inside the form so FormData #}
-  {# carries it on the JS POST. #}
-  <form id="sales-form" method="post" action="{% url 'sales' %}" enctype="multipart/form-data" novalidate>
-    {% csrf_token %}
+{% block title %}Sales Entry{% endblock %}
+{% block page_title %}Sales Entry{% endblock %}
 
-    <p><label>Last* <input type="text" name="last" required></label></p>
-    <p><label>First* <input type="text" name="first" required></label></p>
-    <p><label>Count* <input type="number" name="count" required></label></p>
-    <p><label>State* <input type="text" name="state" required></label></p>
-    <p><label>Lead Source* <input type="text" name="lead_source" required></label></p>
-    <p><label>Date <input type="date" name="date"></label></p>
-    <p><label>Effective Date <input type="date" name="effective_date"></label></p>
-    <p><label>AOR <input type="text" name="aor"></label></p>
-    <p><label>Previous <input type="text" name="previous"></label></p>
-    <p><label>Product <input type="text" name="product"></label></p>
-    <p><label>Company <input type="text" name="company"></label></p>
-    <p><label>Premium <input type="text" name="premium"></label></p>
-    <p><label>Comm <input type="text" name="comm"></label></p>
-    <p><label>Comm 694 <input type="text" name="comm_694"></label></p>
-    <p><label>DNSP <input type="text" name="dnsp"></label></p>
-    <p><label>Agent <input type="text" name="agent"></label></p>
-    <p><label>Calendar <input type="text" name="calendar"></label></p>
-    <p>
-      <label>Luke/Michael
-        <select name="luke_michael">
-          <option value="Luke">Luke</option>
-          <option value="Michael">Michael</option>
-        </select>
-      </label>
-    </p>
+{% block main %}
+      <div data-page class="mx-auto flex h-[calc(100dvh-4rem)] max-w-7xl flex-col px-4 py-3 sm:px-6 lg:px-8">
+        {% if messages %}
+          <div class="mb-2 shrink-0 space-y-1">
+            {% for message in messages %}
+              <div class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
 
-    <p><label>Files <input type="file" name="files" multiple></label></p>
+      <form id="sales-form" method="post" action="{% url 'sales' %}" enctype="multipart/form-data" novalidate
+            class="flex min-h-0 flex-1 flex-col gap-3">
+        {% csrf_token %}
+        <input type="hidden" name="count" id="count" value="1" />
+        <input type="hidden" name="date" id="date" />
 
-    <p><button type="submit">Submit</button></p>
-  </form>
+        <div class="flex w-full shrink-0 items-center justify-between gap-3 max-w-7xl">
+          <p class="text-xs text-slate-500"><span class="text-rose-500">*</span>Required fields</p>
+          <p id="sales-message" class="hidden min-w-0 flex-1 truncate text-sm" role="status"></p>
+          <button type="reset"
+                  class="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+            Clear
+          </button>
+        </div>
 
-  <p id="sales-message" role="status"></p>
+        <div class="grid min-h-0 flex-1 gap-3 ">
 
+          <div class="min-h-0 space-y-3 overflow-y-auto">
+            <section class="rounded-lg border border-slate-200 bg-white">
+              <div class="flex items-center gap-2 border-b border-slate-100 px-3 py-2">
+                <i data-lucide="file-text" class="h-3.5 w-3.5 text-accent-600"></i>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Ancillary PDF <span class="text-rose-500">*</span></h3>
+              </div>
+              <div class="p-2.5">
+                <label data-dropzone="ancillary" for="ancillary_pdf"
+                       class="flex cursor-pointer items-center gap-2.5 rounded-md border-2 border-dashed border-slate-200 bg-slate-50 px-2.5 py-2.5 transition hover:border-accent-300 hover:bg-accent-50/40">
+                  <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-slate-400 ring-1 ring-slate-200">
+                    <i data-lucide="file-up" class="h-4 w-4"></i>
+                  </span>
+                  <span class="min-w-0 flex-1 text-left">
+                    <span data-empty class="block">
+                      <span class="block text-xs font-medium text-slate-700">Drop PDF or click</span>
+                      <span class="block text-[11px] text-slate-500">One file · PDF only</span>
+                    </span>
+                    <span data-file-name class="hidden truncate text-xs font-medium text-slate-800"></span>
+                  </span>
+                  <input id="ancillary_pdf" type="file" name="ancillary_pdf" accept=".pdf,application/pdf" required class="sr-only" />
+                </label>
+              </div>
+            </section>
+            {# ---- coverage #}
+            <section class="rounded-lg border border-slate-200 bg-white">
+              <div class="flex items-center gap-2 border-b border-slate-100 px-3 py-2">
+                <i data-lucide="shield" class="h-3.5 w-3.5 text-accent-600"></i>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Coverage</h3>
+              </div>
+              <div class="grid gap-2.5 p-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div data-addable>
+                  <label for="product" class="mb-0.5 block text-xs font-medium text-slate-600">Product <span class="text-rose-500">*</span></label>
+                  <select id="product" name="product" required
+                          class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm outline-none transition focus:border-accent-500 focus:ring-1 focus:ring-accent-100">
+                    <option value="">Select…</option>
+                    {% for opt in products %}
+                      <option value="{{ opt }}">{{ opt }}</option>
+                    {% endfor %}
+                    <option value="__add__">Add another…</option>
+                  </select>
+                  <div data-add-row class="mt-1.5 hidden items-center gap-1.5">
+                    <input type="text" data-add-input placeholder="New product"
+                           class="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-accent-500" />
+                    <button type="button" data-add-confirm class="rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white">Add</button>
+                  </div>
+                </div>
+                <div data-addable>
+                  <label for="company" class="mb-0.5 block text-xs font-medium text-slate-600">Company <span class="text-rose-500">*</span></label>
+                  <select id="company" name="company" required
+                          class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm outline-none transition focus:border-accent-500 focus:ring-1 focus:ring-accent-100">
+                    <option value="">Select…</option>
+                    {% for opt in companies %}
+                      <option value="{{ opt }}">{{ opt }}</option>
+                    {% endfor %}
+                    <option value="__add__">Add another…</option>
+                  </select>
+                  <div data-add-row class="mt-1.5 hidden items-center gap-1.5">
+                    <input type="text" data-add-input placeholder="New company"
+                           class="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-accent-500" />
+                    <button type="button" data-add-confirm class="rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white">Add</button>
+                  </div>
+                </div>
+                <div>
+                  <label for="previous" class="mb-0.5 block text-xs font-medium text-slate-600">Previous</label>
+                  <input id="previous" type="text" name="previous"
+                         class="w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-500 focus:ring-1 focus:ring-accent-100" />
+                </div>
+                <div>
+                  <label for="premium" class="mb-0.5 block text-xs font-medium text-slate-600">Premium</label>
+                  <input id="premium" type="text" name="premium" inputmode="decimal" placeholder="0.00"
+                         class="w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-500 focus:ring-1 focus:ring-accent-100" />
+                </div>
+                <label class="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5">
+                  <input id="aor" type="checkbox" name="aor" value="yes"
+                         class="h-3.5 w-3.5 rounded border-slate-300 text-accent-600 focus:ring-accent-500" />
+                  <span class="text-xs font-medium text-slate-700">AOR</span>
+                </label>
+                <label class="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5">
+                  <input id="dnsp" type="checkbox" name="dnsp" value="yes"
+                         class="h-3.5 w-3.5 rounded border-slate-300 text-accent-600 focus:ring-accent-500" />
+                  <span class="text-xs font-medium text-slate-700">DNSP</span>
+                </label>
+                <label class="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5">
+                  <input id="medicare_number" type="checkbox" name="medicare_number" value="yes"
+                         class="h-3.5 w-3.5 rounded border-slate-300 text-accent-600 focus:ring-accent-500" />
+                  <span class="text-xs font-medium text-slate-700">Medicare Number</span>
+                </label>
+                <input id="medicare_number_value" type="text" name="medicare_number_value" placeholder="Medicare Number" disabled
+                       class="w-full self-center rounded-md border border-slate-300 px-2.5 py-1.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-500 focus:ring-1 focus:ring-accent-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400" />
+              </div>
+            </section>
+
+            {# ---- client #}
+            <section class="rounded-lg border border-slate-200 bg-white">
+              <div class="flex items-center gap-2 border-b border-slate-100 px-3 py-2">
+                <i data-lucide="user-round" class="h-3.5 w-3.5 text-accent-600"></i>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Client</h3>
+              </div>
+              <div class="grid gap-2.5 p-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div>
+                  <label for="last" class="mb-0.5 block text-xs font-medium text-slate-600">Last name <span class="text-rose-500">*</span></label>
+                  <input id="last" type="text" name="last" required autocomplete="family-name" placeholder="Doe"
+                         class="w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-500 focus:ring-1 focus:ring-accent-100" />
+                </div>
+                <div>
+                  <label for="first" class="mb-0.5 block text-xs font-medium text-slate-600">First name <span class="text-rose-500">*</span></label>
+                  <input id="first" type="text" name="first" required autocomplete="given-name" placeholder="Jane"
+                         class="w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-500 focus:ring-1 focus:ring-accent-100" />
+                </div>
+                <div>
+                  <label for="state" class="mb-0.5 block text-xs font-medium text-slate-600">State <span class="text-rose-500">*</span></label>
+                  <select id="state" name="state" required
+                          class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm outline-none transition focus:border-accent-500 focus:ring-1 focus:ring-accent-100">
+                    <option value="">Select…</option>
+                    {% for st in us_states %}
+                      <option value="{{ st }}">{{ st }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div>
+                  <label for="effective_date" class="mb-0.5 block text-xs font-medium text-slate-600">Effective date <span class="text-rose-500">*</span></label>
+                  <input id="effective_date" type="date" name="effective_date" required
+                         class="w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-sm outline-none transition focus:border-accent-500 focus:ring-1 focus:ring-accent-100" />
+                </div>
+                <div data-addable>
+                  <label for="lead_source" class="mb-0.5 block text-xs font-medium text-slate-600">Lead source</label>
+                  <select id="lead_source" name="lead_source"
+                          class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm outline-none transition focus:border-accent-500 focus:ring-1 focus:ring-accent-100">
+                    <option value="">Select…</option>
+                    {% for opt in lead_sources %}
+                      <option value="{{ opt }}">{{ opt }}</option>
+                    {% endfor %}
+                    <option value="__add__">Add another…</option>
+                  </select>
+                  <div data-add-row class="mt-1.5 hidden items-center gap-1.5">
+                    <input type="text" data-add-input placeholder="New lead source"
+                           class="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-accent-500" />
+                    <button type="button" data-add-confirm class="rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white">Add</button>
+                  </div>
+                </div>
+                <div data-addable>
+                  <label for="calendar" class="mb-0.5 block text-xs font-medium text-slate-600">Calendar</label>
+                  <select id="calendar" name="calendar"
+                          class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm outline-none transition focus:border-accent-500 focus:ring-1 focus:ring-accent-100">
+                    <option value="">Select…</option>
+                    {% for opt in calendars %}
+                      <option value="{{ opt }}">{{ opt }}</option>
+                    {% endfor %}
+                    <option value="__add__">Add another…</option>
+                  </select>
+                  <div data-add-row class="mt-1.5 hidden items-center gap-1.5">
+                    <input type="text" data-add-input placeholder="New calendar"
+                           class="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-accent-500" />
+                    <button type="button" data-add-confirm class="rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white">Add</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+            {# ---- uploads, compact column #}
+
+
+
+            <section class="flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200 bg-white">
+              <div class="flex shrink-0 items-center gap-2 border-b border-slate-100 px-3 py-2">
+                <i data-lucide="paperclip" class="h-3.5 w-3.5 text-accent-600"></i>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Additional files</h3>
+              </div>
+              <div class="grid grid-cols-1 gap-4 p-2.5 md:grid-cols-2">
+                <label data-dropzone="additional" for="additional_files"
+                       class="flex cursor-pointer items-center gap-2.5 rounded-md border-2 border-dashed border-slate-200 bg-slate-50 px-2.5 py-2.5 transition hover:border-accent-300 hover:bg-accent-50/40">
+                  <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-slate-400 ring-1 ring-slate-200">
+                    <i data-lucide="upload" class="h-4 w-4"></i>
+                  </span>
+                  <span class="min-w-0 flex-1 text-left">
+                    <span data-empty class="block">
+                      <span class="block text-xs font-medium text-slate-700">Optional extras</span>
+                      <span class="block text-[11px] text-slate-500">Click or drop · multiple</span>
+                    </span>
+                    <span data-file-name class="hidden truncate text-xs font-medium text-slate-800"></span>
+                  </span>
+                  <input id="additional_files" type="file" name="additional_files" multiple class="sr-only" />
+                </label>
+                <div class="max-h-40 overflow-y-auto rounded-md border border-slate-200">
+                  <p id="additional-file-empty" class="px-3 py-4 text-center text-xs text-slate-400">No files selected</p>
+                  <ul id="additional-file-list" class="hidden divide-y divide-slate-200"></ul>
+                </div>
+              </div>
+            </section>
+            <button id="sales-submit" type="submit"
+                    class="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-accent-600 px-3.5 py-3 text-sm font-semibold text-white
+                           transition hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2
+                           disabled:cursor-not-allowed disabled:opacity-60">
+              <i data-lucide="check" class="h-4 w-4"></i>
+              Submit
+            </button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+{% endblock %}
+
+{% block scripts %}
   <script>
     (function () {
+      var ADD = "__add__";
       var form = document.getElementById("sales-form");
       var message = document.getElementById("sales-message");
+      var submit = document.getElementById("sales-submit");
+      var dateInput = document.getElementById("date");
+      var countInput = document.getElementById("count");
+      var ancillaryInput = document.getElementById("ancillary_pdf");
+      var additionalInput = document.getElementById("additional_files");
+      var ancillaryZone = document.querySelector('[data-dropzone="ancillary"]');
+      var additionalZone = document.querySelector('[data-dropzone="additional"]');
+      var additionalEmpty = document.getElementById("additional-file-empty");
+      var additionalList = document.getElementById("additional-file-list");
+      var medicareCheck = document.getElementById("medicare_number");
+      var medicareValue = document.getElementById("medicare_number_value");
+
+      function todayISO() {
+        var d = new Date();
+        var month = String(d.getMonth() + 1).padStart(2, "0");
+        var day = String(d.getDate()).padStart(2, "0");
+        return d.getFullYear() + "-" + month + "-" + day;
+      }
+
+      function setToday() {
+        if (dateInput) dateInput.value = todayISO();
+        if (countInput) countInput.value = "1";
+      }
+
+      function setMessage(text, ok) {
+        message.textContent = text;
+        message.className = ok
+          ? "min-w-0 flex-1 truncate rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-sm text-emerald-800"
+          : "min-w-0 flex-1 truncate rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-sm text-rose-700";
+      }
+
+      function clearMessage() {
+        message.textContent = "";
+        message.className = "hidden min-w-0 flex-1 truncate text-sm";
+      }
+
+      function isPdf(file) {
+        if (!file) return false;
+        var name = (file.name || "").toLowerCase();
+        return file.type === "application/pdf" || name.endsWith(".pdf");
+      }
+
+      function setDropLabel(zone, text) {
+        if (!zone) return;
+        var empty = zone.querySelector("[data-empty]");
+        var nameEl = zone.querySelector("[data-file-name]");
+        if (!empty || !nameEl) return;
+        if (!text) {
+          empty.classList.remove("hidden");
+          nameEl.classList.add("hidden");
+          nameEl.textContent = "";
+        } else {
+          empty.classList.add("hidden");
+          nameEl.textContent = text;
+          nameEl.classList.remove("hidden");
+        }
+      }
+
+      function renderAncillary() {
+        var file = ancillaryInput.files && ancillaryInput.files[0];
+        setDropLabel(ancillaryZone, file ? file.name : "");
+      }
+
+      function formatSize(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (Math.round((bytes / 1024) * 10) / 10) + " KB";
+        return (Math.round((bytes / (1024 * 1024)) * 10) / 10) + " MB";
+      }
+
+      function syncMedicareInput() {
+        if (!medicareCheck || !medicareValue) return;
+        var on = medicareCheck.checked;
+        medicareValue.disabled = !on;
+        if (!on) medicareValue.value = "";
+        else medicareValue.focus();
+      }
+
+      function renderAdditional() {
+        var files = additionalInput.files;
+        additionalList.innerHTML = "";
+        if (!files || !files.length) {
+          additionalEmpty.classList.remove("hidden");
+          additionalList.classList.add("hidden");
+          return;
+        }
+        additionalEmpty.classList.add("hidden");
+        additionalList.classList.remove("hidden");
+        Array.prototype.forEach.call(files, function (file, index) {
+          var li = document.createElement("li");
+          li.className = "flex items-center gap-2 px-2.5 py-2";
+          li.innerHTML =
+            '<span class="grid h-6 w-6 shrink-0 place-items-center text-slate-400"><i data-lucide="file" class="h-3.5 w-3.5"></i></span>' +
+            '<span class="min-w-0 flex-1">' +
+              '<span data-file-label class="block truncate text-xs font-medium text-slate-800"></span>' +
+              '<span data-file-size class="block text-[11px] text-slate-400"></span>' +
+            "</span>" +
+            '<button type="button" data-remove-file="' + index + '" aria-label="Remove file" ' +
+              'class="grid h-6 w-6 shrink-0 place-items-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">×</button>';
+          li.querySelector("[data-file-label]").textContent = file.name;
+          li.querySelector("[data-file-size]").textContent = formatSize(file.size);
+          additionalList.appendChild(li);
+        });
+        if (window.lucide && typeof window.lucide.createIcons === "function") {
+          window.lucide.createIcons();
+        }
+      }
+
+      function removeAdditionalFile(index) {
+        var dt = new DataTransfer();
+        Array.prototype.forEach.call(additionalInput.files, function (file, i) {
+          if (i !== index) dt.items.add(file);
+        });
+        additionalInput.files = dt.files;
+        additionalInput.dispatchEvent(new Event("change"));
+      }
+
+      function assignFiles(input, fileList, single) {
+        var dt = new DataTransfer();
+        var i;
+        var limit = single ? 1 : fileList.length;
+        for (i = 0; i < limit; i += 1) dt.items.add(fileList[i]);
+        input.files = dt.files;
+      }
+
+      function bindDropzone(zone, input, opts) {
+        if (!zone) return;
+        ["dragenter", "dragover"].forEach(function (type) {
+          zone.addEventListener(type, function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            zone.classList.add("border-accent-400", "bg-accent-50/60");
+          });
+        });
+        ["dragleave", "drop"].forEach(function (type) {
+          zone.addEventListener(type, function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            zone.classList.remove("border-accent-400", "bg-accent-50/60");
+          });
+        });
+        zone.addEventListener("drop", function (event) {
+          var dropped = event.dataTransfer && event.dataTransfer.files;
+          if (!dropped || !dropped.length) return;
+          if (opts && opts.pdfOnly && !isPdf(dropped[0])) {
+            setMessage("Please upload a PDF for the ancillary drop box.", false);
+            return;
+          }
+          assignFiles(input, dropped, opts && opts.single);
+          input.dispatchEvent(new Event("change"));
+        });
+      }
+
+      function bindAddable(root) {
+        var select = root.querySelector("select");
+        var row = root.querySelector("[data-add-row]");
+        var input = root.querySelector("[data-add-input]");
+        var confirm = root.querySelector("[data-add-confirm]");
+        var storageKey = "cg:sales:" + select.name;
+
+        function extras() {
+          try {
+            var parsed = JSON.parse(localStorage.getItem(storageKey) || "[]");
+            return Array.isArray(parsed) ? parsed : [];
+          } catch (err) {
+            return [];
+          }
+        }
+
+        function hasOption(value) {
+          return Array.prototype.some.call(select.options, function (opt) {
+            return opt.value === value;
+          });
+        }
+
+        function insertOption(value) {
+          if (!value || hasOption(value)) return;
+          var addOpt = select.querySelector('option[value="' + ADD + '"]');
+          var opt = document.createElement("option");
+          opt.value = value;
+          opt.textContent = value;
+          select.insertBefore(opt, addOpt);
+        }
+
+        extras().forEach(insertOption);
+
+        function showRow(on) {
+          row.classList.toggle("hidden", !on);
+          row.classList.toggle("flex", on);
+          if (on) input.focus();
+        }
+
+        function addValue() {
+          var value = (input.value || "").trim();
+          if (!value) return;
+          insertOption(value);
+          var list = extras();
+          if (list.indexOf(value) === -1) {
+            list.push(value);
+            try { localStorage.setItem(storageKey, JSON.stringify(list)); } catch (err) {}
+          }
+          select.value = value;
+          input.value = "";
+          showRow(false);
+        }
+
+        select.addEventListener("change", function () {
+          if (select.value === ADD) {
+            select.value = "";
+            showRow(true);
+          } else {
+            showRow(false);
+          }
+        });
+        confirm.addEventListener("click", addValue);
+        input.addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            addValue();
+          }
+        });
+      }
+
+      document.querySelectorAll("[data-addable]").forEach(bindAddable);
+
+      ancillaryInput.addEventListener("change", function () {
+        var file = ancillaryInput.files && ancillaryInput.files[0];
+        if (file && !isPdf(file)) {
+          ancillaryInput.value = "";
+          renderAncillary();
+          setMessage("Please upload a PDF for the ancillary drop box.", false);
+          return;
+        }
+        renderAncillary();
+      });
+      additionalInput.addEventListener("change", renderAdditional);
+      additionalList.addEventListener("click", function (event) {
+        var btn = event.target.closest("[data-remove-file]");
+        if (!btn) return;
+        event.preventDefault();
+        removeAdditionalFile(Number(btn.getAttribute("data-remove-file")));
+      });
+      if (medicareCheck) medicareCheck.addEventListener("change", syncMedicareInput);
+
+      bindDropzone(ancillaryZone, ancillaryInput, { single: true, pdfOnly: true });
+      bindDropzone(additionalZone, additionalInput, { single: false });
+
+      setToday();
+
+      form.addEventListener("reset", function () {
+        clearMessage();
+        window.setTimeout(function () {
+          setToday();
+          renderAncillary();
+          renderAdditional();
+          syncMedicareInput();
+          document.querySelectorAll("[data-add-row]").forEach(function (row) {
+            row.classList.add("hidden");
+            row.classList.remove("flex");
+          });
+        }, 0);
+      });
 
       form.addEventListener("submit", function (event) {
         event.preventDefault();
-        message.textContent = "";
+        clearMessage();
+        setToday();
 
         if (!form.checkValidity()) {
           form.reportValidity();
           return;
         }
+        if (!ancillaryInput.files || !ancillaryInput.files.length) {
+          setMessage("Please attach an ancillary PDF.", false);
+          return;
+        }
+
+        submit.disabled = true;
 
         fetch(form.action, {
           method: "POST",
@@ -67,18 +522,29 @@
           credentials: "same-origin",
         })
           .then(function (response) {
-            if (response.ok) {
-              message.textContent = "Sale submitted.";
+            return response.json().then(function (data) {
+              return { ok: response.ok, status: response.status, data: data };
+            }).catch(function () {
+              return { ok: response.ok, status: response.status, data: null };
+            });
+          })
+          .then(function (result) {
+            if (result.ok) {
               form.reset();
+              setMessage("Sale submitted.", true);
+            } else if (result.data && result.data.missing && result.data.missing.length) {
+              setMessage("Missing required fields: " + result.data.missing.join(", ") + ".", false);
             } else {
-              message.textContent = "Submission failed (" + response.status + ").";
+              setMessage("Submission failed (" + result.status + ").", false);
             }
           })
           .catch(function () {
-            message.textContent = "Submission failed. Check your connection and try again.";
+            setMessage("Submission failed. Check your connection and try again.", false);
+          })
+          .then(function () {
+            submit.disabled = false;
           });
       });
     })();
   </script>
-</body>
-</html>
+{% endblock %}
