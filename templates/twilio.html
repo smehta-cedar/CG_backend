@@ -1,73 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Twilio · Cedar Grove Admin</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="font-sans">
-  <div data-shell></div>
+{% extends "base.html" %}
 
-  <main data-main>
-    <div data-page class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+{% block title %}Twilio{% endblock %}
+{% block page_title %}Twilio{% endblock %}
 
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 class="text-xl font-semibold tracking-tight text-slate-900">Twilio</h2>
-          <p class="mt-1 text-sm text-slate-500">SMS and voice log with delivery status, segments and spend.</p>
-        </div>
-        <select id="range"
-                class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100">
-          <option value="all" selected>All time</option>
-          <option value="7">Last 7 days</option>
-          <option value="30">Last 30 days</option>
-          <option value="90">Last 90 days</option>
-        </select>
+{% block content %}
+      <!-- Page header -->
+      <div>
+        <h2 class="text-xl font-semibold tracking-tight text-slate-900">Twilio</h2>
+        <p class="mt-1 text-sm text-slate-500">SMS and voice log with delivery status, segments and spend.</p>
       </div>
 
-      <div id="notice" class="mt-5 empty:hidden"></div>
-
-      <div id="stats" class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"></div>
-
-      <!-- Delivery breakdown -->
-      <section class="mt-6 rounded-xl border border-slate-200 bg-white p-5">
-        <div class="flex items-baseline justify-between gap-4">
-          <h3 class="text-sm font-semibold text-slate-900">Delivery rate</h3>
-          <p id="delivery-rate" class="text-sm font-semibold text-slate-900"></p>
+      {# Static shell only. The table below is a placeholder: no queryset is looped and #}
+      {# no model backs this page yet. There is no Twilio message model, so these headers #}
+      {# are carried over from the old client-side page and are UNVERIFIED — recheck them #}
+      {# against the model when message data is stored server-side. #}
+      <div class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                <th scope="col" class="px-5 py-3 font-medium">Sent</th>
+                <th scope="col" class="px-5 py-3 font-medium">From</th>
+                <th scope="col" class="px-5 py-3 font-medium">To</th>
+                <th scope="col" class="px-5 py-3 font-medium">Direction</th>
+                <th scope="col" class="px-5 py-3 font-medium">Status</th>
+                <th scope="col" class="px-5 py-3 font-medium">Segments</th>
+                <th scope="col" class="px-5 py-3 font-medium">Price</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="7" class="px-5 py-16 text-center">
+                  <span class="mx-auto grid h-11 w-11 place-items-center rounded-full bg-slate-100 text-slate-400">
+                    <i data-lucide="message-square" class="h-5 w-5"></i>
+                  </span>
+                  <p class="mt-3 text-sm font-medium text-slate-700">No messages to show yet</p>
+                  <p class="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-slate-500">
+                    This page is not wired to a view yet. SMS and voice activity will appear here once the Twilio sync lands.
+                  </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div id="delivery-bar" class="mt-3 flex h-2.5 overflow-hidden rounded-full bg-slate-100"></div>
-        <div id="delivery-legend" class="mt-4 flex flex-wrap gap-x-6 gap-y-2"></div>
-      </section>
-
-      <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div class="relative flex-1">
-          <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
-          <input id="search" type="search" placeholder="Search a number…"
-                 class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-300 focus:ring-2 focus:ring-accent-100" />
-        </div>
-        <div data-filter-wrap>
-          <select id="filter-status" data-filter-label="All statuses"
-                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-44"></select>
-        </div>
-        <div data-filter-wrap>
-          <select id="filter-direction" data-filter-label="All directions"
-                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-44"></select>
-        </div>
-        <button id="export"
-                class="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-accent-700">
-          <i data-lucide="download" class="h-4 w-4"></i> Export CSV
-        </button>
       </div>
-
-      <div id="table" class="mt-4"></div>
-    </div>
-  </main>
-
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-
-</body>
-</html>
+{% endblock %}

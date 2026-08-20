@@ -97,7 +97,7 @@
       </a>
 
       {# Webinar Registrants — every role #}
-      <a href="#" data-nav
+      <a href="{% url 'webinar_registrants' %}" data-nav
          class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
                 {% if request.resolver_match.url_name == 'webinar_registrants' %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
         <i data-lucide="user-round-check"
@@ -106,7 +106,7 @@
       </a>
 
       {# Appointments — every role #}
-      <a href="#" data-nav
+      <a href="{% url 'appointments' %}" data-nav
          class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
                 {% if request.resolver_match.url_name == 'appointments' %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
         <i data-lucide="calendar-check"
@@ -116,7 +116,7 @@
 
       {# Facebook Ads — spend data, so ADMIN and up #}
       {% if user.role == 'ADMIN' or user.role == 'SUPERADMIN' %}
-        <a href="#" data-nav
+        <a href="{% url 'facebook_ads' %}" data-nav
            class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
                   {% if request.resolver_match.url_name == 'facebook_ads' %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
           <i data-lucide="megaphone"
@@ -127,7 +127,7 @@
 
       {# Twilio — messaging spend, so ADMIN and up #}
       {% if user.role == 'ADMIN' or user.role == 'SUPERADMIN' %}
-        <a href="#" data-nav
+        <a href="{% url 'twilio' %}" data-nav
            class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
                   {% if request.resolver_match.url_name == 'twilio' %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
           <i data-lucide="message-square"
@@ -138,7 +138,7 @@
 
       {# Users — account administration, SUPERADMIN only #}
       {% if user.role == 'SUPERADMIN' %}
-        <a href="#" data-nav
+        <a href="{% url 'users' %}" data-nav
            class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
                   {% if request.resolver_match.url_name == 'users' %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
           <i data-lucide="users-round"

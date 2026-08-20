@@ -17,6 +17,41 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard.html"
 
 
+class UsersView(LoginRequiredMixin, TemplateView):
+    """Stub so the page is reachable. No context yet — the template renders a
+    static placeholder table. Role gating and the queryset land with CRUD."""
+
+    template_name = "users.html"
+
+
+class AppointmentsView(LoginRequiredMixin, TemplateView):
+    """Stub so the page is reachable. No context yet — the template renders a
+    static placeholder table. Role gating and the queryset land with CRUD."""
+
+    template_name = "appointments.html"
+
+
+class FacebookAdsView(LoginRequiredMixin, TemplateView):
+    """Stub so the page is reachable. No context yet — the template renders a
+    static placeholder table. Role gating and the queryset land with CRUD."""
+
+    template_name = "facebook-ads.html"
+
+
+class WebinarRegistrantsView(LoginRequiredMixin, TemplateView):
+    """Stub so the page is reachable. No context yet — the template renders a
+    static placeholder table. Role gating and the queryset land with CRUD."""
+
+    template_name = "webinar-registrants.html"
+
+
+class TwilioView(LoginRequiredMixin, TemplateView):
+    """Stub so the page is reachable. No context yet — the template renders a
+    static placeholder table. Role gating and the queryset land with CRUD."""
+
+    template_name = "twilio.html"
+
+
 class LoginView(View):
     """Step 1 — take an email address and mail a sign-in code to it."""
 

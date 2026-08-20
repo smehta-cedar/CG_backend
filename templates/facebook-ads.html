@@ -1,86 +1,46 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Facebook Ads · Cedar Grove Admin</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="font-sans">
-  <div data-shell></div>
+{% extends "base.html" %}
 
-  <main data-main>
-    <div data-page class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+{% block title %}Facebook Ads{% endblock %}
+{% block page_title %}Facebook Ads{% endblock %}
 
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 class="text-xl font-semibold tracking-tight text-slate-900">Facebook Ads</h2>
-          <p class="mt-1 text-sm text-slate-500">Ad-level performance — every column from the export, scroll sideways to see them all.</p>
-        </div>
-        <select id="range"
-                class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100">
-          <option value="all" selected>All time</option>
-          <option value="7">Last 7 days</option>
-          <option value="30">Last 30 days</option>
-          <option value="90">Last 90 days</option>
-        </select>
+{% block content %}
+      <!-- Page header -->
+      <div>
+        <h2 class="text-xl font-semibold tracking-tight text-slate-900">Facebook Ads</h2>
+        <p class="mt-1 text-sm text-slate-500">Ad-level performance pulled from the ad account.</p>
       </div>
 
-      <div id="notice" class="mt-5 empty:hidden"></div>
-
-      <div id="stats" class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"></div>
-
-      <section class="mt-6 rounded-xl border border-slate-200 bg-white p-5">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h3 class="text-sm font-semibold text-slate-900">Top ads</h3>
-            <p class="mt-0.5 text-sm text-slate-500">The ten highest ads in the current view.</p>
-          </div>
-          <div class="flex gap-1 rounded-lg bg-slate-100 p-1">
-            <button data-metric="Spend" class="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition">Spend</button>
-            <button data-metric="Results" class="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition">Results</button>
-            <button data-metric="Clicks" class="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition">Clicks</button>
-          </div>
+      {# Static shell only. The table below is a placeholder: no queryset is looped and #}
+      {# no model backs this page yet. There is no Facebook Ads model, so these headers #}
+      {# are carried over from the old client-side page and are UNVERIFIED — recheck #}
+      {# them against the model when ad data is stored server-side. #}
+      <div class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                <th scope="col" class="px-5 py-3 font-medium">Ad</th>
+                <th scope="col" class="px-5 py-3 font-medium">Ad set</th>
+                <th scope="col" class="px-5 py-3 font-medium">Status</th>
+                <th scope="col" class="px-5 py-3 font-medium">Spend</th>
+                <th scope="col" class="px-5 py-3 font-medium">Results</th>
+                <th scope="col" class="px-5 py-3 font-medium">Clicks</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="6" class="px-5 py-16 text-center">
+                  <span class="mx-auto grid h-11 w-11 place-items-center rounded-full bg-slate-100 text-slate-400">
+                    <i data-lucide="megaphone" class="h-5 w-5"></i>
+                  </span>
+                  <p class="mt-3 text-sm font-medium text-slate-700">No ad data to show yet</p>
+                  <p class="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-slate-500">
+                    This page is not wired to a view yet. Ad performance will appear here once the Facebook Ads sync lands.
+                  </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div id="chart" class="mt-6 h-64"></div>
-      </section>
-
-      <!-- Filters -->
-      <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div class="relative flex-1">
-          <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
-          <input id="search" type="search" placeholder="Search ads and ad sets…"
-                 class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-300 focus:ring-2 focus:ring-accent-100" />
-        </div>
-        <div data-filter-wrap>
-          <select id="filter-status" data-filter-label="All statuses"
-                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-44"></select>
-        </div>
-        <div data-filter-wrap>
-          <select id="filter-adset" data-filter-label="All ad sets"
-                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-52"></select>
-        </div>
-        <div class="relative">
-          <button id="columns-btn"
-                  class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">
-            <i data-lucide="columns-3" class="h-4 w-4"></i> Columns
-          </button>
-          <div id="columns-panel" class="fade-in absolute right-0 z-20 mt-2 hidden max-h-72 w-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg"></div>
-        </div>
-        <button id="export"
-                class="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-accent-700">
-          <i data-lucide="download" class="h-4 w-4"></i> Export CSV
-        </button>
       </div>
-
-      <div id="table" class="mt-4"></div>
-    </div>
-  </main>
-
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-
-</body>
-</html>
+{% endblock %}

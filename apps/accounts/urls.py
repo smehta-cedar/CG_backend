@@ -9,5 +9,10 @@ urlpatterns = [
     path("login/verify/", views.VerifyOTPView.as_view(), name="verify_otp"),
     path("login/resend/", views.ResendOTPView.as_view(), name="resend_otp"),
     path("dashboard/", views.DashboardView.as_view(), name="dashboard"),
+    path("users/", views.UsersView.as_view(), name="users"),
+    path("appointments/", views.AppointmentsView.as_view(), name="appointments"),
+    path("facebook-ads/", views.FacebookAdsView.as_view(), name="facebook_ads"),
+    path("webinar-registrants/", views.WebinarRegistrantsView.as_view(), name="webinar_registrants"),
+    path("twilio/", views.TwilioView.as_view(), name="twilio"),
     path("logout/", LogoutView.as_view(next_page="login"), name="logout"),
 ]
