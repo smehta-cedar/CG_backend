@@ -1,150 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Users · Cedar Grove Admin</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="font-sans">
-  <div data-shell></div>
+{% extends "base.html" %}
 
-  <main data-main>
-    <div data-page class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+{% block title %}Users{% endblock %}
+{% block page_title %}Users{% endblock %}
 
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 class="text-xl font-semibold tracking-tight text-slate-900">Users</h2>
-          <p class="mt-1 text-sm text-slate-500">Who can sign in, what they can reach and when they were last active.</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <select id="range"
-                  class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100">
-            <option value="all" selected>All time</option>
-            <option value="7">Active last 7 days</option>
-            <option value="30">Active last 30 days</option>
-            <option value="90">Active last 90 days</option>
-          </select>
-          <button id="add-user"
-                  class="inline-flex items-center gap-2 rounded-lg bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-accent-700">
-            <i data-lucide="user-plus" class="h-4 w-4"></i> Add user
-          </button>
-        </div>
+{% block content %}
+      <!-- Page header -->
+      <div>
+        <h2 class="text-xl font-semibold tracking-tight text-slate-900">Users</h2>
+        <p class="mt-1 text-sm text-slate-500">Who can sign in, what they can reach and when they were last active.</p>
       </div>
 
-      <div id="notice" class="mt-5 empty:hidden"></div>
-
-      <div id="stats" class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"></div>
-
-      <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div class="relative flex-1">
-          <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
-          <input id="search" type="search" placeholder="Search name or email…"
-                 class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-300 focus:ring-2 focus:ring-accent-100" />
-        </div>
-        <div data-filter-wrap>
-          <select id="filter-role" data-filter-label="All roles"
-                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-44"></select>
-        </div>
-        <div data-filter-wrap>
-          <select id="filter-status" data-filter-label="All statuses"
-                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-accent-300 focus:ring-2 focus:ring-accent-100 sm:w-44"></select>
-        </div>
-        <button id="export"
-                class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
-          <i data-lucide="download" class="h-4 w-4"></i> Export CSV
-        </button>
-      </div>
-
-      <div id="table" class="mt-4"></div>
-
-      <div class="mt-6 grid gap-4 sm:grid-cols-3" id="role-legend"></div>
-    </div>
-  </main>
-
-  <!-- Add / edit modal -->
-  <div id="modal" class="fixed inset-0 z-50 hidden">
-    <div data-modal-backdrop class="absolute inset-0 bg-slate-900/40"></div>
-    <div class="absolute inset-0 grid place-items-center p-4">
-      <div class="fade-in w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-        <div class="flex items-start justify-between border-b border-slate-200 px-5 py-4">
-          <div>
-            <h3 id="modal-title" class="text-base font-semibold text-slate-900">Add user</h3>
-            <p id="modal-subtitle" class="mt-0.5 text-sm text-slate-500">Invite someone to the admin console.</p>
-          </div>
-          <button data-modal-close class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-            <i data-lucide="x" class="h-4 w-4"></i>
-          </button>
-        </div>
-
-        <form id="user-form" class="space-y-4 px-5 py-5" novalidate>
-          <div>
-            <label for="u-name" class="mb-1.5 block text-sm font-medium text-slate-700">Full name</label>
-            <input id="u-name" type="text" placeholder="Jane Cooper"
-                   class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-100" />
-          </div>
-          <div>
-            <label for="u-email" class="mb-1.5 block text-sm font-medium text-slate-700">Email address</label>
-            <input id="u-email" type="email" placeholder="jane@cedargrove.io"
-                   class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-100" />
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label for="u-role" class="mb-1.5 block text-sm font-medium text-slate-700">Role</label>
-              <select id="u-role"
-                      class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-accent-500 focus:ring-2 focus:ring-accent-100">
-                <option value="admin">Admin</option>
-                <option value="manager">Manager</option>
-                <option value="viewer" selected>Viewer</option>
-              </select>
-            </div>
-            <div>
-              <label for="u-status" class="mb-1.5 block text-sm font-medium text-slate-700">Status</label>
-              <select id="u-status"
-                      class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-accent-500 focus:ring-2 focus:ring-accent-100">
-                <option>Active</option>
-                <option>Invited</option>
-                <option>Suspended</option>
-              </select>
-            </div>
-          </div>
-          <div class="flex justify-end gap-2 pt-1">
-            <button type="button" data-modal-close
-                    class="rounded-lg border border-slate-200 px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">Cancel</button>
-            <button type="submit"
-                    class="rounded-lg bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-accent-700">Save user</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Delete confirmation -->
-  <div id="delete-modal" class="fixed inset-0 z-50 hidden">
-    <div data-delete-close class="absolute inset-0 bg-slate-900/40"></div>
-    <div class="absolute inset-0 grid place-items-center p-4">
-      <div class="fade-in w-full max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
-        <span class="grid h-11 w-11 place-items-center rounded-full bg-rose-50 text-rose-600">
-          <i data-lucide="trash-2" class="h-5 w-5"></i>
-        </span>
-        <h3 class="mt-3 text-base font-semibold text-slate-900">Delete user</h3>
-        <p class="mt-1 text-sm leading-relaxed text-slate-500">
-          Remove <span id="delete-name" class="font-medium text-slate-700"></span> from the console? They will lose access immediately.
-        </p>
-        <div class="mt-5 flex justify-end gap-2">
-          <button type="button" data-delete-close
-                  class="rounded-lg border border-slate-200 px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">Cancel</button>
-          <button type="button" data-delete-close
-                  class="rounded-lg bg-rose-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">Delete user</button>
+      {# Static shell only. The table below is a placeholder: no queryset is looped and #}
+      {# no view backs this page yet. Headers match apps.accounts.models.User so the #}
+      {# CRUD pass can add the loop later without renaming any column. #}
+      <div class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                <th scope="col" class="px-5 py-3 font-medium">Email</th>
+                <th scope="col" class="px-5 py-3 font-medium">Role</th>
+                <th scope="col" class="px-5 py-3 font-medium">Status</th>
+                <th scope="col" class="px-5 py-3 font-medium">Last sign-in</th>
+                <th scope="col" class="px-5 py-3 font-medium">Joined</th>
+                <th scope="col" class="px-5 py-3 font-medium"><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="6" class="px-5 py-16 text-center">
+                  <span class="mx-auto grid h-11 w-11 place-items-center rounded-full bg-slate-100 text-slate-400">
+                    <i data-lucide="users-round" class="h-5 w-5"></i>
+                  </span>
+                  <p class="mt-3 text-sm font-medium text-slate-700">No users to show yet</p>
+                  <p class="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-slate-500">
+                    This page is not wired to a view yet. Accounts are managed through the Django admin until user management ships.
+                  </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
-  </div>
-
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-
-</body>
-</html>
+{% endblock %}

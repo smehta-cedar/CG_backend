@@ -9,63 +9,191 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="{% static "css/tailwind.css" %}" />
+  {# static/css/tailwind.css is a frozen partial build missing utilities we need, so #}
+  {# the shell runs off the CDN instead. That file is still on disk, just not linked. #}
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      // shell.js adds these at runtime; they appear in no served markup, so pin
+      // them here rather than relying on the CDN's DOM observer to catch them.
+      safelist: ["lg:w-20", "lg:hidden", "lg:justify-center", "lg:px-0", "overflow-hidden"],
+      theme: {
+        extend: {
+          colors: {
+            accent: {
+              50:  "#eef2ff",
+              100: "#e0e7ff",
+              200: "#c7d2fe",
+              300: "#a5b4fc",
+              500: "#6366f1",
+              600: "#4f46e5",
+              700: "#4338ca",
+              800: "#3730a3",
+            },
+          },
+          fontFamily: {
+            sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+
+  {# With JS off the drawer/collapse controls are dead weight and the sidebar must #}
+  {# not sit off-canvas, so put it back in flow and hide the controls. Pure CSS. #}
+  <noscript>
+    <style>
+      [data-sidebar-el]{position:static!important;transform:none!important;width:16rem!important}
+      [data-drawer-backdrop],[data-drawer-toggle],[data-sidebar-toggle]{display:none!important}
+      [data-dropdown-trigger]{pointer-events:none}
+      @media (max-width:1023px){
+        [data-shell-root]{flex-direction:column}
+        [data-sidebar-el]{width:100%!important;border-right:0;border-bottom:1px solid #e2e8f0}
+      }
+    </style>
+  </noscript>
 
   {% block extra_head %}{% endblock %}
 </head>
 
-{# Sidebar stays expanded; collapse/toggle JS was removed. #}
-<body class="font-sans" data-role="{{ user_role }}" data-sidebar="expanded">
+{# Sidebar and topbar are both in normal flow. The data-* attributes are inert hooks #}
+{# for shell.js; nothing here depends on JS to lay out correctly. #}
+<body class="bg-slate-50 font-sans text-slate-900" data-role="{{ user.role }}" data-sidebar="expanded">
+
+  <div data-shell-root class="flex min-h-screen">
+
+  {# Mobile drawer backdrop. Hidden until shell.js opens the drawer. #}
+  <div data-drawer-backdrop class="fixed inset-0 z-30 hidden bg-slate-900/40 lg:hidden"></div>
 
   {# ------------------------------------------------------------- sidebar #}
-  <div data-backdrop class="fixed inset-0 z-30 bg-slate-900/40 opacity-0 pointer-events-none transition-opacity lg:hidden"></div>
-
+  {# Below lg this is an off-canvas drawer; from lg up it is back in normal flow #}
+  {# as a plain flex column. shell.js only flips -translate-x-full / lg:w-20. #}
   <aside data-sidebar-el
-         class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col border-r border-slate-200 bg-white
-                transition-[width,transform] duration-200 lg:translate-x-0">
-    <div class="flex h-16 items-center gap-2.5 border-b border-slate-200 px-4">
-      <img src="{% static 'img/logo.png' %}" alt="Cedar Grove" class="h-9 w-9 shrink-0 rounded-lg object-cover" />
+         class="fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 -translate-x-full flex-col overflow-hidden
+                border-r border-slate-200 bg-white transition-all duration-200 ease-out
+                lg:static lg:z-auto lg:translate-x-0">
+
+    {# ---- logo block #}
+    <div data-sidebar-head class="flex h-16 shrink-0 items-center gap-2.5 border-b border-slate-200 px-4">
+      <img src="{% static 'img/logo.png' %}" alt="Cedar Grove"
+           class="h-9 w-9 shrink-0 rounded-lg object-cover" />
       <div data-nav-label class="min-w-0">
         <p class="truncate text-sm font-semibold text-slate-900">Cedar Grove</p>
         <p class="truncate text-xs text-slate-500">Admin Console</p>
       </div>
     </div>
 
+    {# ---- nav list. Only "dashboard" is routed today; the rest sit on href="#" until #}
+    {# their views land, at which point swap the href and nothing else changes. #}
     <nav class="flex-1 space-y-1 overflow-y-auto p-3">
-      {% for item in nav_items %}
-        <a href="{{ item.url }}" data-nav
+
+      {# Dashboard — every role #}
+      <a href="{% url 'dashboard' %}" data-nav
+         class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+                {% if request.resolver_match.url_name == 'dashboard' %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+        <i data-lucide="layout-dashboard"
+           class="h-[18px] w-[18px] shrink-0 {% if request.resolver_match.url_name == 'dashboard' %}text-accent-600{% else %}text-slate-400 group-hover:text-slate-600{% endif %}"></i>
+        <span data-nav-label class="truncate">Dashboard</span>
+      </a>
+
+      {# Webinar Registrants — every role #}
+      <a href="#" data-nav
+         class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+                {% if request.resolver_match.url_name == 'webinar_registrants' %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+        <i data-lucide="user-round-check"
+           class="h-[18px] w-[18px] shrink-0 {% if request.resolver_match.url_name == 'webinar_registrants' %}text-accent-600{% else %}text-slate-400 group-hover:text-slate-600{% endif %}"></i>
+        <span data-nav-label class="truncate">Webinar Registrants</span>
+      </a>
+
+      {# Appointments — every role #}
+      <a href="#" data-nav
+         class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+                {% if request.resolver_match.url_name == 'appointments' %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+        <i data-lucide="calendar-check"
+           class="h-[18px] w-[18px] shrink-0 {% if request.resolver_match.url_name == 'appointments' %}text-accent-600{% else %}text-slate-400 group-hover:text-slate-600{% endif %}"></i>
+        <span data-nav-label class="truncate">Appointments</span>
+      </a>
+
+      {# Facebook Ads — spend data, so ADMIN and up #}
+      {% if user.role == 'ADMIN' or user.role == 'SUPERADMIN' %}
+        <a href="#" data-nav
            class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
-                  {% if item.active %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
-          <i data-lucide="{{ item.icon }}"
-             class="h-[18px] w-[18px] shrink-0 {% if item.active %}text-accent-600{% else %}text-slate-400 group-hover:text-slate-600{% endif %}"></i>
-          <span data-nav-label class="truncate">{{ item.label }}</span>
+                  {% if request.resolver_match.url_name == 'facebook_ads' %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+          <i data-lucide="megaphone"
+             class="h-[18px] w-[18px] shrink-0 {% if request.resolver_match.url_name == 'facebook_ads' %}text-accent-600{% else %}text-slate-400 group-hover:text-slate-600{% endif %}"></i>
+          <span data-nav-label class="truncate">Facebook Ads</span>
         </a>
-      {% endfor %}
+      {% endif %}
+
+      {# Twilio — messaging spend, so ADMIN and up #}
+      {% if user.role == 'ADMIN' or user.role == 'SUPERADMIN' %}
+        <a href="#" data-nav
+           class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+                  {% if request.resolver_match.url_name == 'twilio' %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+          <i data-lucide="message-square"
+             class="h-[18px] w-[18px] shrink-0 {% if request.resolver_match.url_name == 'twilio' %}text-accent-600{% else %}text-slate-400 group-hover:text-slate-600{% endif %}"></i>
+          <span data-nav-label class="truncate">Twilio</span>
+        </a>
+      {% endif %}
+
+      {# Users — account administration, SUPERADMIN only #}
+      {% if user.role == 'SUPERADMIN' %}
+        <a href="#" data-nav
+           class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+                  {% if request.resolver_match.url_name == 'users' %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+          <i data-lucide="users-round"
+             class="h-[18px] w-[18px] shrink-0 {% if request.resolver_match.url_name == 'users' %}text-accent-600{% else %}text-slate-400 group-hover:text-slate-600{% endif %}"></i>
+          <span data-nav-label class="truncate">Users</span>
+        </a>
+      {% endif %}
+
     </nav>
 
-    {% if nav_hidden_count %}
-      <div data-nav-label class="mx-3 mb-2 rounded-lg bg-slate-50 p-3">
-        <p class="flex items-center gap-1.5 text-xs font-medium text-slate-600">
-          <i data-lucide="lock" class="h-3.5 w-3.5"></i>
-          {{ nav_hidden_count }} section{{ nav_hidden_count|pluralize }} hidden
-        </p>
-        <p class="mt-1 text-xs leading-relaxed text-slate-500">
-          Your {{ user_role_label|lower }} role limits what you can open.
-        </p>
-      </div>
-    {% endif %}
+    {# ---- sidebar footer. This is the JS-free home for Profile / Settings / Log out; #}
+    {# the topbar dropdown is a convenience layered on top of it, never a replacement. #}
+    <div data-sidebar-foot class="shrink-0 border-t border-slate-200 p-3">
+      <a href="{% block profile_url %}#{% endblock %}" data-sidebar-row
+         class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+        <i data-lucide="user-round" class="h-[18px] w-[18px] shrink-0 text-slate-400 group-hover:text-slate-600"></i>
+        <span data-nav-label class="truncate">Profile</span>
+      </a>
+      <a href="{% block settings_url %}#{% endblock %}" data-sidebar-row
+         class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+        <i data-lucide="settings" class="h-[18px] w-[18px] shrink-0 text-slate-400 group-hover:text-slate-600"></i>
+        <span data-nav-label class="truncate">Settings</span>
+      </a>
+      {# Django's LogoutView is POST-only since 4.1, so this is a form rather than a link. #}
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" data-sidebar-row
+                class="group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50">
+          <i data-lucide="log-out" class="h-[18px] w-[18px] shrink-0"></i>
+          <span data-nav-label class="truncate">Log out</span>
+        </button>
+      </form>
 
-    <button data-collapse
-            class="m-3 hidden items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900 lg:flex">
-      <span data-collapse-icon class="flex shrink-0"></span>
-      <span data-nav-label>Collapse</span>
-    </button>
+      {# Desktop-only width toggle. Hidden entirely below lg and under <noscript>. #}
+      <button type="button" data-sidebar-toggle data-sidebar-row
+              aria-label="Collapse sidebar" aria-expanded="true"
+              class="group mt-1 hidden w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 lg:flex">
+        <span class="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-400 group-hover:text-slate-600">
+          <span data-icon-expanded class="flex"><i data-lucide="chevrons-left" class="h-[18px] w-[18px]"></i></span>
+          <span data-icon-collapsed class="hidden"><i data-lucide="chevrons-right" class="h-[18px] w-[18px]"></i></span>
+        </span>
+        <span data-nav-label class="truncate">Collapse</span>
+      </button>
+    </div>
   </aside>
 
+  <div class="flex min-w-0 flex-1 flex-col">
+
   {# -------------------------------------------------------------- topbar #}
-  <header data-topbar class="fixed inset-x-0 top-0 z-30 h-16 border-b border-slate-200 bg-white/85 backdrop-blur">
-    <div class="flex h-16 items-center gap-3 px-4 sm:px-6">
-      <button data-menu class="grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden">
+  <header data-topbar class="flex h-16 shrink-0 items-center border-b border-slate-200 bg-white">
+    <div class="flex h-16 w-full items-center gap-3 px-4 sm:px-6">
+
+      {# Drawer trigger. Hidden from lg up and under <noscript>. #}
+      <button type="button" data-drawer-toggle aria-label="Open navigation" aria-expanded="false"
+              class="-ml-1 grid h-9 w-9 shrink-0 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 lg:hidden">
         <i data-lucide="menu" class="h-5 w-5"></i>
       </button>
 
@@ -73,97 +201,48 @@
         {% block page_title %}{{ page_title|default:"Dashboard" }}{% endblock %}
       </h1>
 
-      <div class="ml-auto flex items-center gap-1 sm:gap-2">
-        <div class="relative hidden sm:block">
-          <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
-          <input data-global-search type="search" placeholder="Search this page…"
-                 class="w-44 rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-700 outline-none transition
-                        placeholder:text-slate-400 focus:w-64 focus:border-accent-300 focus:bg-white focus:ring-2 focus:ring-accent-100" />
-        </div>
+      {# ---- user cluster. Renders as a plain identity block with JS off; shell.js #}
+      {# upgrades the button into a dropdown in part 3. #}
+      <div class="relative ml-auto">
+        <button type="button" data-dropdown-trigger="user"
+                class="flex items-center gap-2.5 rounded-lg py-1.5 pl-1.5 pr-2 transition hover:bg-slate-100">
+          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent-600 text-xs font-semibold uppercase text-white">
+            {{ user.email|slice:":2" }}
+          </span>
+          <span class="hidden text-left leading-tight sm:block">
+            <span class="block max-w-[14rem] truncate text-sm font-medium text-slate-800">{{ user.get_username }}</span>
+            <span class="block text-xs text-slate-500">{{ user.get_role_display }}</span>
+          </span>
+          <i data-lucide="chevron-down" class="hidden h-4 w-4 shrink-0 text-slate-400 sm:block"></i>
+        </button>
 
-        {# notifications #}
-        <div class="relative">
-          <button data-dropdown-trigger="notifications"
-                  class="relative grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100">
-            <i data-lucide="bell" class="h-5 w-5"></i>
-            {% if notifications %}
-              <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent-600 ring-2 ring-white"></span>
-            {% endif %}
-          </button>
-          <div data-dropdown="notifications"
-               class="fade-in absolute right-0 mt-2 hidden w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
-            <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-              <p class="text-sm font-semibold text-slate-900">Notifications</p>
-              <span class="rounded-full bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-700">{{ notifications|length }} new</span>
-            </div>
-            <ul class="max-h-80 divide-y divide-slate-100 overflow-y-auto">
-              {% for n in notifications %}
-                <li class="flex gap-3 px-4 py-3 hover:bg-slate-50">
-                  <span class="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent-50 text-accent-600">
-                    <i data-lucide="{{ n.icon }}" class="h-4 w-4"></i>
-                  </span>
-                  <div class="min-w-0">
-                    <p class="text-sm font-medium text-slate-800">{{ n.title }}</p>
-                    <p class="mt-0.5 text-xs text-slate-500">{{ n.meta }}</p>
-                  </div>
-                </li>
-              {% empty %}
-                <li class="px-4 py-6 text-center text-sm text-slate-400">Nothing new right now.</li>
-              {% endfor %}
-            </ul>
-            <div class="border-t border-slate-100 px-4 py-2.5 text-center">
-              <button class="text-xs font-medium text-accent-700 hover:text-accent-800">Mark all as read</button>
-            </div>
+        <div data-dropdown="user"
+             class="absolute right-0 z-20 mt-2 hidden w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+          <div class="border-b border-slate-100 px-4 py-3">
+            <p class="truncate text-sm font-medium text-slate-900">{{ user.get_username }}</p>
+            <p class="mt-1">
+              <span class="inline-flex items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-xs font-medium text-accent-700 ring-1 ring-inset ring-accent-200">
+                {{ user.get_role_display }}
+              </span>
+            </p>
           </div>
-        </div>
-
-        {# user menu #}
-        <div class="relative">
-          <button data-dropdown-trigger="user" class="flex items-center gap-2 rounded-lg py-1.5 pl-1.5 pr-2 hover:bg-slate-100">
-            <span class="grid h-8 w-8 place-items-center rounded-full bg-accent-600 text-xs font-semibold text-white">{{ user_initials }}</span>
-            <span class="hidden text-left leading-tight sm:block">
-              <span class="block text-sm font-medium text-slate-800">{{ user.get_full_name|default:user.get_username }}</span>
-              <span class="block text-xs capitalize text-slate-500">{{ user_role_label }}</span>
-            </span>
-            <i data-lucide="chevron-down" class="h-4 w-4 text-slate-400"></i>
-          </button>
-          <div data-dropdown="user"
-               class="fade-in absolute right-0 mt-2 hidden w-60 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
-            <div class="border-b border-slate-100 px-4 py-3">
-              <p class="truncate text-sm font-medium text-slate-900">{{ user.get_full_name|default:user.get_username }}</p>
-              <p class="truncate text-xs text-slate-500">{{ user.email }}</p>
-              <p class="mt-2">
-                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset {{ user_role_badge }}">
-                  {{ user_role_label }}
-                </span>
-              </p>
-            </div>
-            <div class="p-1.5">
-              <a href="{% block profile_url %}#{% endblock %}"
-                 class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-slate-600 hover:bg-slate-100">
-                <i data-lucide="user-round" class="h-4 w-4 text-slate-400"></i> Profile
-              </a>
-              <a href="{% block settings_url %}#{% endblock %}"
-                 class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-slate-600 hover:bg-slate-100">
-                <i data-lucide="settings" class="h-4 w-4 text-slate-400"></i> Settings
-              </a>
-              {# Django's LogoutView is POST-only since 4.1, so this is a form rather than a link. #}
-              <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit"
-                        class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-rose-600 hover:bg-rose-50">
-                  <i data-lucide="log-out" class="h-4 w-4"></i> Log out
-                </button>
-              </form>
-            </div>
+          <div class="p-1.5">
+            <form method="post" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50">
+                <i data-lucide="log-out" class="h-4 w-4 shrink-0"></i> Log out
+              </button>
+            </form>
           </div>
         </div>
       </div>
+
     </div>
   </header>
 
   {# ---------------------------------------------------------------- main #}
-  <main data-main>
+  <main data-main class="flex-1">
     {% block main %}
       <div data-page class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
 
@@ -180,8 +259,12 @@
     {% endblock %}
   </main>
 
+  </div>
+  </div>
+
   {# ------------------------------------------------------------- scripts #}
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="{% static 'js/shell.js' %}"></script>
 
   {% block scripts %}{% endblock %}
 </body>
