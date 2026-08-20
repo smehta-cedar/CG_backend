@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic import TemplateView
@@ -173,6 +174,52 @@ class AppointmentsView(LoginRequiredMixin, TemplateView):
     static placeholder table. Role gating and the queryset land with CRUD."""
 
     template_name = "appointments.html"
+
+
+# USPS abbreviations, plus DC. Passed into the sales form as a state dropdown.
+US_STATES = (
+    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL",
+    "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME",
+    "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH",
+    "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI",
+    "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI",
+    "WY",
+)
+
+LEAD_SOURCES = ("WEBINAR", "DENTAL", "REFERRAL", "SF", "T65 LEAD HEROS")
+PRODUCTS = ("CHAS", "DVH", "MAPD", "SUP", "ACA", "HHC")
+COMPANIES = ("HLN", "BCBS", "BF", "HEALTHSRPING", "HUMANA")
+AGENTS = ("BW", "DW", "DM", "JC", "RF", "AS", "SP", "RB", "TB")
+CALENDARS = ("AD", "AB", "VA", "PERSONAL")
+
+
+class SalesView(LoginRequiredMixin, View):
+    """Static sales entry form. GET renders the form; POST acknowledges the
+    submission with JSON so the page's fetch() can show success/error.
+    Nothing is stored yet — there is no Sale model and no upload handling."""
+
+    required_fields = ("last", "first", "state", "effective_date", "product", "company")
+    required_files = ("ancillary_pdf",)
+
+    def get(self, request):
+        return render(request, "sales.html", {
+            "us_states": US_STATES,
+            "lead_sources": LEAD_SOURCES,
+            "products": PRODUCTS,
+            "companies": COMPANIES,
+            "agents": AGENTS,
+            "calendars": CALENDARS,
+        })
+
+    def post(self, request):
+        missing = [f for f in self.required_fields if not request.POST.get(f, "").strip()]
+        for field in self.required_files:
+            uploaded = request.FILES.get(field)
+            if uploaded is None or not getattr(uploaded, "size", 0):
+                missing.append(field)
+        if missing:
+            return JsonResponse({"ok": False, "missing": missing}, status=400)
+        return JsonResponse({"ok": True})
 
 
 class FacebookAdsView(LoginRequiredMixin, TemplateView):
