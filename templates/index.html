@@ -1,193 +1,185 @@
-<!DOCTYPE html>
+{% load static %}<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign in · Cedar Grove Admin</title>
+  <title>Cedar Grove Senior Health Solutions · Covington, LA</title>
+  <meta name="description" content="Local Medicare planning and senior health insurance guidance in Covington, Louisiana. Medicare Advantage, Medicare Supplements, and ancillary coverage." />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="assets/js/theme.js"></script>
-</head>
-<body class="min-h-screen bg-slate-50 font-sans">
-  <div class="grid min-h-screen lg:grid-cols-2">
-
-    <!-- Form -->
-    <div class="flex items-center justify-center px-5 py-12 sm:px-8">
-      <div class="w-full max-w-sm">
-        <div class="mb-8 flex items-center gap-2.5">
-          <div class="brand-gradient grid h-10 w-10 place-items-center rounded-xl text-white">
-            <i data-lucide="activity" class="h-5 w-5"></i>
-          </div>
-          <div>
-            <p class="text-sm font-semibold leading-tight text-slate-900">Admin Console</p>
-          </div>
-        </div>
-
-        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Sign in </h1>
-        <p class="mt-1.5 text-sm text-slate-500">View campaign, webinar and appointment reporting.</p>
-
-        <form id="login-form" class="mt-8 space-y-4" novalidate>
-          <div>
-            <label for="email" class="mb-1.5 block text-sm font-medium text-slate-700">Email address</label>
-            <div class="relative">
-              <i data-lucide="mail" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
-              <input id="email" name="email" type="email" autocomplete="email" placeholder="you@cedargrove.io"
-                     class="w-full rounded-lg border border-slate-300 py-2.5 pl-9 pr-3 text-sm text-slate-900 outline-none transition
-                            placeholder:text-slate-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-100" />
-            </div>
-          </div>
-
-          <div>
-            <label for="password" class="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
-            <div class="relative">
-              <i data-lucide="lock" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
-              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••"
-                     class="w-full rounded-lg border border-slate-300 py-2.5 pl-9 pr-10 text-sm text-slate-900 outline-none transition
-                            placeholder:text-slate-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-100" />
-              <button type="button" id="toggle-password" aria-label="Show password"
-                      class="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-                <i data-lucide="eye" class="h-4 w-4"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between pt-1">
-            <label class="flex cursor-pointer select-none items-center gap-2 text-sm text-slate-600">
-              <input id="remember" type="checkbox" checked
-                     class="h-4 w-4 rounded border-slate-300 text-accent-600 focus:ring-accent-500" />
-              Remember me
-            </label>
-            <a href="#" class="text-sm font-medium text-accent-700 hover:text-accent-800">Forgot password?</a>
-          </div>
-
-          <p id="login-error" class="hidden items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
-            <i data-lucide="circle-alert" class="mt-0.5 h-4 w-4 shrink-0"></i>
-            <span id="login-error-text"></span>
-          </p>
-
-          <button type="submit"
-                  class="flex w-full items-center justify-center gap-2 rounded-lg bg-accent-600 px-4 py-2.5 text-sm font-semibold text-white
-                         transition hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2">
-            Sign in
-            <i data-lucide="arrow-right" class="h-4 w-4"></i>
-          </button>
-        </form>
-
-        <div class="mt-8 rounded-xl border border-slate-200 bg-white p-4">
-          <p class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <i data-lucide="key-round" class="h-3.5 w-3.5"></i> Demo accounts
-          </p>
-          <div id="demo-accounts" class="mt-3 space-y-1.5"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Marketing panel -->
-    <div class="brand-gradient relative hidden overflow-hidden lg:block">
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,.16),transparent_45%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,.12),transparent_40%)]"></div>
-      <div class="relative flex h-full flex-col justify-center px-14 text-white">
-        <div class="flex items-center gap-2">
-          <img src="assets/logo.png" alt="Cedar Grove Healthcare Solutions" class="h-16 w-auto rounded-2xl">
-        
-        <h2 class=" text-3xl font-semibold leading-tight tracking-tight">Cedar Grove Healthcare Solutions</h2></div>
-        <p class="mt-4 max-w-md leading-relaxed text-white/85">
-          Ad spend, webinar registrations, booked calls and appointment activity, reconciled in a single place so you always know what a lead really costs.
-        </p>
-        <dl class="mt-12 grid max-w-md grid-cols-3 gap-6">
-          <div>
-            <dt class="text-2xl font-semibold">4,000+</dt>
-            <dd class="mt-1 text-sm text-white/75">Registrants</dd>
-          </div>
-          <div>
-            <dt class="text-2xl font-semibold">$1111+</dt>
-            <dd class="mt-1 text-sm text-white/75">Ad spend</dd>
-          </div>
-          <div>
-            <dt class="text-2xl font-semibold">96.4%</dt>
-            <dd class="mt-1 text-sm text-white/75">SMS delivered</dd>
-          </div>
-        </dl>
-      </div>
-    </div>
-  </div>
-
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-  <script src="assets/js/data.js"></script>
-  <script src="assets/js/csv.js"></script>
-  <script src="assets/js/app.js"></script>
   <script>
-    // Already signed in? Skip the form.
-    if (App.auth.current()) location.replace('dashboard.html');
-
-    const form = document.getElementById('login-form');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const errorBox = document.getElementById('login-error');
-    const errorText = document.getElementById('login-error-text');
-
-    function showError(message) {
-      errorText.textContent = message;
-      errorBox.classList.remove('hidden');
-      errorBox.classList.add('flex');
-      App.icons();
-    }
-
-    function clearError() {
-      errorBox.classList.add('hidden');
-      errorBox.classList.remove('flex');
-    }
-
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
-      clearError();
-
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-
-      if (!email || !password) {
-        showError('Enter both an email address and a password.');
-        return;
-      }
-
-      const user = App.auth.login(email, password, document.getElementById('remember').checked);
-      if (!user) {
-        showError('That email and password combination is not recognised.');
-        passwordInput.select();
-        return;
-      }
-      location.href = 'dashboard.html';
-    });
-
-    [emailInput, passwordInput].forEach((input) => input.addEventListener('input', clearError));
-
-    document.getElementById('toggle-password').addEventListener('click', (event) => {
-      const isPassword = passwordInput.type === 'password';
-      passwordInput.type = isPassword ? 'text' : 'password';
-      event.currentTarget.innerHTML = `<i data-lucide="${isPassword ? 'eye-off' : 'eye'}" class="h-4 w-4"></i>`;
-      App.icons();
-    });
-
-    // One-click fill for each seeded role.
-    document.getElementById('demo-accounts').innerHTML = DB.ACCOUNTS.map((account) => `
-      <button type="button" data-email="${account.email}" data-password="${account.password}"
-              class="flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition hover:bg-slate-50">
-        ${App.badge(DB.ROLES[account.role].label)}
-        <span class="min-w-0 flex-1 truncate text-sm text-slate-600">${account.email}</span>
-        <span class="text-xs text-slate-400">${account.password}</span>
-      </button>`).join('');
-
-    document.querySelectorAll('#demo-accounts button').forEach((button) => {
-      button.addEventListener('click', () => {
-        emailInput.value = button.dataset.email;
-        passwordInput.value = button.dataset.password;
-        clearError();
-        passwordInput.focus();
-      });
-    });
-
-    App.icons();
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            accent: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              200: '#99f6e4',
+              300: '#5eead4',
+              400: '#2dd4bf',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
+            },
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    };
   </script>
+  <style>
+    .brand-gradient {
+      background: linear-gradient(135deg, #0f766e 0%, #115e59 48%, #134e4a 100%);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased">
+
+  <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur">
+    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+      <a href="#top" class="flex min-w-0 items-center gap-2.5">
+        <span class="brand-gradient grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white" aria-hidden="true">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3 7 9h3v6H8l4 6 4-6h-2V9h3z" />
+          </svg>
+        </span>
+        <span class="min-w-0">
+          <span class="block truncate text-sm font-semibold leading-tight text-slate-900">Cedar Grove</span>
+          <span class="block truncate text-xs text-slate-500">Senior Health Solutions</span>
+        </span>
+      </a>
+
+      <nav class="flex items-center gap-1 sm:gap-2" aria-label="Primary">
+        <a href="#services" class="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:inline">Services</a>
+        <a href="#contact" class="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:inline">Visit us</a>
+        <a href="{% url 'login' %}"
+           class="inline-flex items-center rounded-lg bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2">
+          Login
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="relative overflow-hidden">
+      <div class="brand-gradient absolute inset-0"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(255,255,255,.16),transparent_42%),radial-gradient(circle_at_85%_75%,rgba(255,255,255,.1),transparent_40%)]"></div>
+
+      <div class="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
+        <p class="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white/90 ring-1 ring-white/20">
+          Covington, Louisiana
+        </p>
+        <h1 class="mt-5 max-w-2xl text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
+          Clear Medicare guidance, close to home.
+        </h1>
+        <p class="mt-4 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
+          Cedar Grove Senior Health Solutions helps local families compare Medicare Advantage, Medicare Supplements, and ancillary coverage — without the guesswork.
+        </p>
+        <div class="mt-8 flex flex-wrap items-center gap-3">
+          <a href="tel:+19852821000"
+             class="inline-flex items-center justify-center rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-accent-800 transition hover:bg-accent-50">
+            Call (985) 282-1000
+          </a>
+          <a href="#services"
+             class="inline-flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold text-white ring-1 ring-white/35 transition hover:bg-white/10">
+            See how we help
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="services" class="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+      <div class="max-w-2xl">
+        <h2 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Insurance and senior healthcare, explained plainly</h2>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base">
+          We are a local health insurance broker and senior services agency. Our focus is helping you choose coverage that fits your doctors, budget, and next chapter.
+        </p>
+      </div>
+
+      <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <span class="grid h-10 w-10 place-items-center rounded-xl bg-accent-50 text-accent-700" aria-hidden="true">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4.5 12.5 9 17l10.5-10.5" />
+              <rect x="3" y="3" width="18" height="18" rx="4" />
+            </svg>
+          </span>
+          <h3 class="mt-4 text-base font-semibold text-slate-900">Medicare Advantage</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-600">
+            Compare Part C plans that bundle hospital, medical, and often extra benefits so you know what is covered before you enroll.
+          </p>
+        </article>
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <span class="grid h-10 w-10 place-items-center rounded-xl bg-accent-50 text-accent-700" aria-hidden="true">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v18" />
+              <path d="M5 8h14" />
+              <path d="M7 8c0 4.5 2.2 8 5 11" />
+              <path d="M17 8c0 4.5-2.2 8-5 11" />
+            </svg>
+          </span>
+          <h3 class="mt-4 text-base font-semibold text-slate-900">Medicare Supplements</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-600">
+            Walk through Medigap options that help cover gaps in Original Medicare, with straightforward comparisons of premiums and benefits.
+          </p>
+        </article>
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:col-span-2 lg:col-span-1">
+          <span class="grid h-10 w-10 place-items-center rounded-xl bg-accent-50 text-accent-700" aria-hidden="true">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="8" />
+              <path d="M12 8v8" />
+              <path d="M8 12h8" />
+            </svg>
+          </span>
+          <h3 class="mt-4 text-base font-semibold text-slate-900">Ancillary &amp; senior services</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-600">
+            Get help with dental, vision, hearing, and other ancillary policies, plus guidance through the wider set of senior healthcare choices.
+          </p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact" class="border-t border-slate-200 bg-white">
+    <div class="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 md:flex-row md:items-start md:justify-between">
+      <div>
+        <p class="text-sm font-semibold text-slate-900">Cedar Grove Senior Health Solutions</p>
+        <p class="mt-1 text-sm text-slate-500">Local Medicare planning in Covington</p>
+      </div>
+      <div class="grid gap-6 text-sm text-slate-600 sm:grid-cols-3 sm:gap-10">
+        <p>
+          <span class="block font-medium text-slate-900">Address</span>
+          406 N. Florida St., Ste. 1<br />
+          Covington, LA 70433
+        </p>
+        <p>
+          <span class="block font-medium text-slate-900">Phone</span>
+          <a href="tel:+19852821000" class="text-accent-700 hover:text-accent-800">(985) 282-1000</a>
+        </p>
+        <p>
+          <span class="block font-medium text-slate-900">Hours</span>
+          Monday–Friday<br />
+          8:00 AM – 5:00 PM
+        </p>
+      </div>
+    </div>
+    <div class="border-t border-slate-100">
+      <p class="mx-auto max-w-6xl px-4 py-4 text-xs text-slate-400 sm:px-6">
+        © 2026 Cedar Grove Senior Health Solutions. Independent insurance brokerage. We do not offer every plan available in your area.
+      </p>
+    </div>
+  </footer>
+
 </body>
 </html>
