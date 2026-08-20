@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign in · Cedar Grove Admin</title>
+  <title>Verify code · Cedar Grove Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -44,9 +44,14 @@
           </div>
         </div>
 
-        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Sign in</h1>
-        <p class="mt-1.5 text-sm text-slate-500">
-          Sign in with your password, then confirm with a 6-digit code we email you.
+        <p class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <i data-lucide="shield-check" class="h-3.5 w-3.5"></i> Step 2 of 2
+        </p>
+        <h1 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Check your email</h1>
+        <p class="mt-1.5 text-sm leading-relaxed text-slate-500">
+          We sent a {{ code_length }}-digit code to
+          <span class="font-medium text-slate-700">{{ masked_email }}</span>.
+          It expires in 5 minutes.
         </p>
 
         {% if messages %}
@@ -63,45 +68,40 @@
           </div>
         {% endif %}
 
-        <form method="post" action="{% url 'login' %}" class="mt-8 space-y-4">
+        <form method="post" action="{% url 'verify_otp' %}" class="mt-8 space-y-4">
           {% csrf_token %}
           <div>
-            <label for="email" class="mb-1.5 block text-sm font-medium text-slate-700">Email address</label>
-            <div class="relative">
-              <i data-lucide="mail" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
-              <input id="email" name="email" type="email" autocomplete="email" required autofocus
-                     value="{{ email|default:'' }}" placeholder="you@cedargrove.io"
-                     class="w-full rounded-lg border border-slate-300 py-2.5 pl-9 pr-3 text-sm text-slate-900 outline-none transition
-                            placeholder:text-slate-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-100" />
-            </div>
-          </div>
-
-          <div>
-            <label for="password" class="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
-            <div class="relative">
-              <i data-lucide="lock" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
-              <input id="password" name="password" type="password" autocomplete="current-password" required
-                     placeholder="••••••••"
-                     class="w-full rounded-lg border border-slate-300 py-2.5 pl-9 pr-10 text-sm text-slate-900 outline-none transition
-                            placeholder:text-slate-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-100" />
-              <button type="button" id="toggle-password" aria-label="Show password"
-                      class="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-                <i data-lucide="eye" class="h-4 w-4"></i>
-              </button>
-            </div>
+            <label for="code" class="mb-1.5 block text-sm font-medium text-slate-700">Sign-in code</label>
+            <input id="code" name="code" type="text" inputmode="numeric" pattern="[0-9]*"
+                   maxlength="{{ code_length }}" autocomplete="one-time-code" required autofocus
+                   placeholder="000000"
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-center text-lg font-semibold tracking-[0.4em]
+                          text-slate-900 outline-none transition placeholder:font-normal placeholder:tracking-[0.4em]
+                          placeholder:text-slate-300 focus:border-accent-500 focus:ring-2 focus:ring-accent-100" />
           </div>
 
           <button type="submit"
                   class="flex w-full items-center justify-center gap-2 rounded-lg bg-accent-600 px-4 py-2.5 text-sm font-semibold text-white
                          transition hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2">
-            Continue
+            Verify and sign in
             <i data-lucide="arrow-right" class="h-4 w-4"></i>
           </button>
         </form>
 
+        <div class="mt-6 flex items-center justify-between border-t border-slate-200 pt-4">
+          {# Resending mints a new code, so it posts rather than being a bare link. #}
+          <form method="post" action="{% url 'resend_otp' %}">
+            {% csrf_token %}
+            <button type="submit" class="text-sm font-medium text-accent-700 hover:text-accent-800">
+              Resend code
+            </button>
+          </form>
+          <a href="{% url 'login' %}" class="text-sm text-slate-500 hover:text-slate-700">Back to sign in</a>
+        </div>
+
         <p class="mt-6 flex items-start gap-2 text-xs leading-relaxed text-slate-500">
-          <i data-lucide="shield-check" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i>
-          <span>After your password checks out we'll email a 6-digit code, valid for 5 minutes.</span>
+          <i data-lucide="info" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i>
+          <span>You get 3 attempts per code, and a new code can be sent once a minute.</span>
         </p>
       </div>
     </div>
@@ -136,19 +136,6 @@
   </div>
 
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-  <script>
-    lucide.createIcons();
-
-    const passwordInput = document.getElementById('password');
-    document.getElementById('toggle-password').addEventListener('click', (event) => {
-      const hidden = passwordInput.type === 'password';
-      passwordInput.type = hidden ? 'text' : 'password';
-      event.currentTarget.innerHTML = `<i data-lucide="${hidden ? 'eye-off' : 'eye'}" class="h-4 w-4"></i>`;
-      lucide.createIcons();
-    });
-
-    // Coming back from a failed attempt, the email is pre-filled - start on the password.
-    if (document.getElementById('email').value) passwordInput.focus();
-  </script>
+  <script>lucide.createIcons();</script>
 </body>
 </html>

@@ -29,12 +29,18 @@ class LoginView(View):
 
     def post(self, request):
         email = request.POST.get("email", "").strip()
+        password = request.POST.get("password", "")
 
-        if services.issue_otp(email) is None:
-            messages.error(request, "We don't have an account for that email address.")
-            return render(request, self.template_name, {"email": email})
+        user = services.authenticate_user(request, email, password)
+        if user is None:
+            messages.error(request, "Invalid email or password.")
+            return render(request, "login.html", {"email": email})
 
-        request.session[services.SESSION_KEY] = email
+        try:
+            services.issue_otp(user)          # user object, not email
+        except services.OTPCooldown as e:
+            messages.info(request, str(e))    # still send them to verify — old code may be live
+        request.session[services.SESSION_KEY] = user.email
         return redirect("verify_otp")
 
 
@@ -77,13 +83,13 @@ class ResendOTPView(View):
 
     def post(self, request):
         email = request.session.get(services.SESSION_KEY)
-        if not email:
+        user = services.pending_user(email) if email else None
+        if user is None:
             return redirect("login")
 
-        if services.issue_otp(email) is None:
-            request.session.pop(services.SESSION_KEY, None)
-            messages.error(request, "We don't have an account for that email address.")
-            return redirect("login")
-
-        messages.success(request, "A new code is on its way.")
+        try:
+            services.issue_otp(user)
+            messages.info(request, "A new code has been sent.")
+        except services.OTPError as e:      # catches OTPCooldown too
+            messages.error(request, str(e))
         return redirect("verify_otp")
