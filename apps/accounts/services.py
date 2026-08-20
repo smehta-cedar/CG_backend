@@ -2,7 +2,8 @@
 
 Everything about authenticating, issuing, expiring and checking a code lives
 here so the views only have to translate an HTTP request into one of these
-calls.
+calls. The same goes for user management: reading and changing accounts
+happens here, never in a view.
 """
 
 import math
@@ -163,3 +164,89 @@ def _send_code(user, code):
 def _burn(token):
     token.is_used = True
     token.save(update_fields=["is_used"])
+
+
+# --- User management ---
+
+
+class UserAdminError(Exception):
+    """A user-management request failed. ``str(exc)`` is safe to show the user."""
+
+
+def list_users():
+    """Every account, for the user-management table."""
+    return User.objects.all()
+
+
+def get_account(pk):
+    """The account with this primary key, or ``None``."""
+    return User.objects.filter(pk=pk).first()
+
+
+def create_account(actor, email, role, password):
+    """Create a new account on behalf of ``actor`` and return it.
+
+    Every rule is enforced here, whatever the form let through: the role
+    must be real, only a super admin may mint another super admin, and the
+    email must not already belong to an account.
+
+    Raises :class:`UserAdminError` when any of that fails.
+    """
+    if role not in User.Role.values:
+        raise UserAdminError("That role is not recognised.")
+    if role == User.Role.SUPERADMIN and not actor.is_superadmin:
+        raise UserAdminError("Only a super admin can create super admin accounts.")
+
+    email = User.objects.normalize_email((email or "").strip())
+    if not email:
+        raise UserAdminError("An email address is required.")
+    if User.objects.filter(email__iexact=email).exists():
+        raise UserAdminError(f"An account for {email} already exists.")
+
+    return User.objects.create_user(email=email, password=password, role=role)
+
+
+def update_account(actor, target, role, is_active):
+    """Change ``target``'s role and active flag on behalf of ``actor``.
+
+    Enforced here, whatever the form allowed: only a super admin may touch a
+    super admin account or hand out that role, and nobody may change their
+    own role or deactivate themselves. Email and password are not editable
+    through this path.
+
+    Raises :class:`UserAdminError` when any of that fails.
+    """
+    if role not in User.Role.values:
+        raise UserAdminError("That role is not recognised.")
+    if target.is_superadmin and not actor.is_superadmin:
+        raise UserAdminError("Only a super admin can modify super admin accounts.")
+    if role == User.Role.SUPERADMIN and not actor.is_superadmin:
+        raise UserAdminError("Only a super admin can grant the super admin role.")
+    if actor == target:
+        if role != actor.role:
+            raise UserAdminError("You can't change your own role.")
+        if not is_active:
+            raise UserAdminError("You can't deactivate your own account.")
+
+    target.role = role
+    target.is_active = bool(is_active)
+    target.save(update_fields=["role", "is_active"])
+    return target
+
+
+def delete_account(actor, target):
+    """Permanently remove ``target`` on behalf of ``actor``.
+
+    Only a super admin may delete a super admin account, and nobody may
+    delete themselves. There is no undo: the row goes, and the user's OTP
+    tokens go with it (``OTPToken.user`` cascades).
+
+    Raises :class:`UserAdminError` when either rule fails.
+    """
+    if target.is_superadmin and not actor.is_superadmin:
+        raise UserAdminError("Only a super admin can delete super admin accounts.")
+    if actor == target:
+        raise UserAdminError(
+            "You can't delete your own account. Ask another admin, or deactivate it instead."
+        )
+    target.delete()

@@ -57,6 +57,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+    @property
+    def is_superadmin(self):
+        """True for the one role allowed to administer other accounts."""
+        return self.role == self.Role.SUPERADMIN
+
+    @property
+    def is_admin_or_above(self):
+        """True for ADMIN and SUPERADMIN — the roles that see spend and user pages."""
+        return self.role in {self.Role.SUPERADMIN, self.Role.ADMIN}
+
 
 class OTPToken(models.Model):
     """A single-use sign-in code emailed to a user.

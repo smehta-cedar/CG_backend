@@ -136,8 +136,8 @@
         </a>
       {% endif %}
 
-      {# Users — account administration, SUPERADMIN only #}
-      {% if user.role == 'SUPERADMIN' %}
+      {# Users — account administration, SUPERADMIN and ADMIN #}
+      {% if user.is_admin_or_above %}
         <a href="{% url 'users' %}" data-nav
            class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
                   {% if request.resolver_match.url_name == 'users' %}bg-accent-50 text-accent-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">

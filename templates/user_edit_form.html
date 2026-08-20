@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_heading }}{% endblock %}
+{% block page_title %}{{ page_heading }}{% endblock %}
+
+{% block content %}
+      <!-- Page header -->
+      <div>
+        <h2 class="text-xl font-semibold tracking-tight text-slate-900">{{ page_heading }}</h2>
+        <p class="mt-1 text-sm text-slate-500">Change what this account can reach, or switch it off without deleting it.</p>
+      </div>
+
+      <div class="mt-6 max-w-lg rounded-xl border border-slate-200 bg-white p-6">
+        {% if form.non_field_errors %}
+          <div class="mb-5 space-y-2">
+            {% for error in form.non_field_errors %}
+              <p class="flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
+                <i data-lucide="circle-alert" class="mt-0.5 h-4 w-4 shrink-0"></i>
+                <span>{{ error }}</span>
+              </p>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <form method="post" class="space-y-4">
+          {% csrf_token %}
+
+          <div>
+            <span class="mb-1.5 block text-sm font-medium text-slate-700">Email address</span>
+            {# Read-only: email isn't editable here, so there's nothing to submit. #}
+            <p class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700">{{ target.email }}</p>
+          </div>
+
+          <div>
+            <label for="id_role" class="mb-1.5 block text-sm font-medium text-slate-700">Role</label>
+            <select id="id_role" name="role" required {% if form.fields.role.disabled %}disabled{% endif %}
+                    class="w-full rounded-lg border {% if form.role.errors %}border-rose-400{% else %}border-slate-300{% endif %} bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition
+                           focus:border-accent-500 focus:ring-2 focus:ring-accent-100 disabled:bg-slate-50 disabled:text-slate-500">
+              {% for value, label in form.fields.role.choices %}
+                <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            {% if form.fields.role.disabled %}<p class="mt-1.5 text-xs text-slate-500">You can't change your own role.</p>{% endif %}
+            {% for error in form.role.errors %}<p class="mt-1.5 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+          </div>
+
+          <div>
+            <label for="id_is_active" class="flex items-center gap-2.5 text-sm font-medium text-slate-700">
+              <input id="id_is_active" name="is_active" type="checkbox" {% if form.is_active.value %}checked{% endif %}
+                     class="h-4 w-4 rounded border-slate-300 text-accent-600 focus:ring-accent-500" />
+              Account is active
+            </label>
+            <p class="mt-1.5 text-xs text-slate-500">Inactive accounts can't sign in but keep their history.</p>
+            {% for error in form.is_active.errors %}<p class="mt-1.5 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-2">
+            <a href="{% url 'users' %}"
+               class="rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">Cancel</a>
+            <button type="submit"
+                    class="inline-flex items-center gap-2 rounded-lg bg-accent-600 px-4 py-2.5 text-sm font-semibold text-white
+                           transition hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2">
+              {{ submit_label }}
+            </button>
+          </div>
+        </form>
+      </div>
+{% endblock %}

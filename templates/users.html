@@ -5,14 +5,22 @@
 
 {% block content %}
       <!-- Page header -->
-      <div>
-        <h2 class="text-xl font-semibold tracking-tight text-slate-900">Users</h2>
-        <p class="mt-1 text-sm text-slate-500">Who can sign in, what they can reach and when they were last active.</p>
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-semibold tracking-tight text-slate-900">Users</h2>
+          <p class="mt-1 text-sm text-slate-500">Who can sign in, what they can reach and when they were last active.</p>
+        </div>
+        {% if user.is_admin_or_above %}
+          <a href="{% url 'user_add' %}"
+             class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-accent-600 px-4 py-2.5 text-sm font-semibold text-white
+                    transition hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2">
+            <i data-lucide="plus" class="h-4 w-4"></i>
+            Add user
+          </a>
+        {% endif %}
       </div>
 
-      {# Static shell only. The table below is a placeholder: no queryset is looped and #}
-      {# no view backs this page yet. Headers match apps.accounts.models.User so the #}
-      {# CRUD pass can add the loop later without renaming any column. #}
+      {# Columns match accounts.models.User; rows come from services.list_users(). #}
       <div class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm">
@@ -27,17 +35,52 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
+              {% for u in users_list %}
+              <tr>
+                <td class="px-5 py-3 font-medium text-slate-900">{{ u.email }}</td>
+                <td class="px-5 py-3 text-slate-700">{{ u.get_role_display }}</td>
+                <td class="px-5 py-3">
+                  {% if u.is_active %}
+                    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Active</span>
+                  {% else %}
+                    <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/20">Inactive</span>
+                  {% endif %}
+                </td>
+                <td class="px-5 py-3 text-slate-700">
+                  {% if u.last_login %}{{ u.last_login|date:"M j, Y, g:i a" }}{% else %}<span class="text-slate-400">Never</span>{% endif %}
+                </td>
+                <td class="px-5 py-3 text-slate-700">{{ u.date_joined|date:"M j, Y" }}</td>
+                <td class="px-5 py-3 text-right">
+                  {% if u.is_superadmin and not user.is_superadmin %}
+                    <span class="text-slate-400">&mdash;</span>
+                  {% else %}
+                    <div class="inline-flex items-center gap-1">
+                      <a href="{% url 'user_edit' u.pk %}"
+                         class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+                        <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+                        
+                      </a>
+                      {% if u.pk != user.pk %}
+                        <a href="{% url 'user_delete' u.pk %}"
+                           class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-rose-600 transition hover:bg-rose-50 hover:text-rose-700">
+                          <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                          
+                        </a>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
               <tr>
                 <td colspan="6" class="px-5 py-16 text-center">
                   <span class="mx-auto grid h-11 w-11 place-items-center rounded-full bg-slate-100 text-slate-400">
                     <i data-lucide="users-round" class="h-5 w-5"></i>
                   </span>
-                  <p class="mt-3 text-sm font-medium text-slate-700">No users to show yet</p>
-                  <p class="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-slate-500">
-                    This page is not wired to a view yet. Accounts are managed through the Django admin until user management ships.
-                  </p>
+                  <p class="mt-3 text-sm font-medium text-slate-700">No accounts yet</p>
                 </td>
               </tr>
+              {% endfor %}
             </tbody>
           </table>
         </div>
