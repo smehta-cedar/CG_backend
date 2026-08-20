@@ -10,12 +10,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="{% static "css/tailwind.css" %}" />
-  <script src="{% static 'js/theme.js' %}"></script>
 
   {% block extra_head %}{% endblock %}
 </head>
 
-{# data-role feeds the client-side role gates; data-sidebar is re-set by App.initShell(). #}
+{# Sidebar stays expanded; collapse/toggle JS was removed. #}
 <body class="font-sans" data-role="{{ user_role }}" data-sidebar="expanded">
 
   {# ------------------------------------------------------------- sidebar #}
@@ -25,7 +24,7 @@
          class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col border-r border-slate-200 bg-white
                 transition-[width,transform] duration-200 lg:translate-x-0">
     <div class="flex h-16 items-center gap-2.5 border-b border-slate-200 px-4">
-      <img src="{% static 'logo.png' %}" alt="Cedar Grove" class="h-9 w-9 shrink-0 rounded-lg object-cover" />
+      <img src="{% static 'img/logo.png' %}" alt="Cedar Grove" class="h-9 w-9 shrink-0 rounded-lg object-cover" />
       <div data-nav-label class="min-w-0">
         <p class="truncate text-sm font-semibold text-slate-900">Cedar Grove</p>
         <p class="truncate text-xs text-slate-500">Admin Console</p>
@@ -183,18 +182,6 @@
 
   {# ------------------------------------------------------------- scripts #}
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-  <script src="{% static 'js/data.js' %}"></script>
-  <script src="{% static 'js/csv.js' %}"></script>
-  <script src="{% static 'js/app.js' %}"></script>
-  <script>
-    /* Relative CSV paths would resolve against the page URL under Django,
-       so point loadData() at the collected static files instead. */
-    App.config.dataBase = "{% get_static_prefix %}data/";
-
-    /* The shell markup is rendered above by Django, so only the behaviour
-       (mobile drawer, collapse, dropdowns, global search) needs wiring. */
-    App.initShell();
-  </script>
 
   {% block scripts %}{% endblock %}
 </body>

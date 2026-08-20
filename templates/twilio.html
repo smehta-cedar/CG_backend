@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="assets/js/theme.js"></script>
 </head>
 <body class="font-sans">
   <div data-shell></div>
@@ -69,94 +68,6 @@
   </main>
 
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-  <script src="assets/js/data.js"></script>
-  <script src="assets/js/csv.js"></script>
-  <script src="assets/js/app.js"></script>
-  <script>
-    App.init({ title: 'Twilio' });
-    App.statsSkeleton('#stats', 4);
 
-    const DELIVERED = /^(delivered|received|completed|sent)$/i;
-    const FAILED = /^(failed|undelivered|no-answer|no answer|busy|canceled|cancelled)$/i;
-
-    const table = App.table({
-      mount: '#table',
-      search: '#search',
-      range: '#range',
-      exportBtn: '#export',
-      exportName: 'twilio-log.csv',
-      filters: [
-        { el: '#filter-status', column: 'Status' },
-        { el: '#filter-direction', column: 'Direction' },
-      ],
-      columns: ['Direction', 'Type', 'From', 'To', 'Status', 'Timestamp', 'Segments', 'Cost'],
-      align: { Segments: 'right', Cost: 'right' },
-      cell: {
-        Direction: (value) => {
-          const outbound = /out/i.test(value);
-          return `<span class="inline-flex items-center gap-1.5 text-sm ${outbound ? 'text-slate-700' : 'text-accent-700'}">
-            <i data-lucide="${outbound ? 'arrow-up-right' : 'arrow-down-left'}" class="h-3.5 w-3.5"></i>${App.escapeHtml(value)}</span>`;
-        },
-        Status: (value) => App.badge(value),
-        From: (value) => `<span class="tabular-nums">${App.escapeHtml(value)}</span>`,
-        To: (value) => `<span class="tabular-nums font-medium text-slate-900">${App.escapeHtml(value)}</span>`,
-        Timestamp: (value) => App.fmt.dateTime(value),
-        Cost: (value) => App.fmt.money(App.toNumber(value), 4),
-      },
-      empty: { title: 'No messages', message: 'Nothing was sent or received for this filter combination.', icon: 'message-square-off' },
-      onRender: renderSummary,
-    });
-
-    function columnFor(pattern) {
-      return table.columns().find((c) => pattern.test(c)) || null;
-    }
-
-    function renderSummary(rows) {
-      const statusColumn = columnFor(/^status$/i);
-      const costColumn = columnFor(/^cost|price/i);
-      const segmentColumn = columnFor(/segment/i);
-
-      const statuses = {};
-      if (statusColumn) {
-        rows.forEach((row) => {
-          const key = String(row[statusColumn] || 'unknown').trim() || 'unknown';
-          statuses[key] = (statuses[key] || 0) + 1;
-        });
-      }
-
-      const delivered = Object.keys(statuses).filter((k) => DELIVERED.test(k)).reduce((n, k) => n + statuses[k], 0);
-      const failed = Object.keys(statuses).filter((k) => FAILED.test(k)).reduce((n, k) => n + statuses[k], 0);
-      const rate = rows.length ? (delivered / rows.length) * 100 : 0;
-      const cost = costColumn ? rows.reduce((total, row) => total + (App.toNumber(row[costColumn]) || 0), 0) : 0;
-      const segments = segmentColumn ? rows.reduce((total, row) => total + (App.toNumber(row[segmentColumn]) || 0), 0) : rows.length;
-
-      App.renderStats('#stats', [
-        { label: 'Total messages', value: App.fmt.number(rows.length), delta: -1.8, icon: 'message-square', hint: `${App.fmt.number(segments)} billable segments` },
-        { label: 'Delivery rate', value: App.fmt.percent(rate, 1), delta: 0.6, icon: 'circle-check', hint: `${App.fmt.number(delivered)} delivered` },
-        { label: 'Failures', value: App.fmt.number(failed), delta: -3.5, icon: 'triangle-alert', hint: 'Failed, undelivered or unanswered' },
-        { label: 'Spend', value: App.fmt.money(cost, 2), delta: 2.2, icon: 'wallet', hint: `${App.fmt.money(rows.length ? cost / rows.length : 0, 4)} per message` },
-      ]);
-
-      document.getElementById('delivery-rate').textContent = `${App.fmt.percent(rate, 1)} delivered`;
-
-      const tones = { delivered: 'bg-emerald-500', received: 'bg-emerald-400', completed: 'bg-emerald-600', sent: 'bg-sky-500', queued: 'bg-slate-300', failed: 'bg-rose-500', undelivered: 'bg-rose-400', busy: 'bg-amber-400', 'no-answer': 'bg-amber-500' };
-      const entries = Object.entries(statuses).sort((a, b) => b[1] - a[1]);
-
-      document.getElementById('delivery-bar').innerHTML = entries
-        .map(([status, n]) => `<div class="${tones[status.toLowerCase()] || 'bg-slate-400'}" style="width:${(n / (rows.length || 1)) * 100}%" title="${App.escapeHtml(status)}: ${n}"></div>`)
-        .join('');
-
-      document.getElementById('delivery-legend').innerHTML = entries
-        .map(([status, n]) => `
-          <div class="flex items-center gap-2">
-            <span class="h-2.5 w-2.5 rounded-full ${tones[status.toLowerCase()] || 'bg-slate-400'}"></span>
-            <span class="text-sm text-slate-600">${App.escapeHtml(status)}</span>
-            <span class="text-sm font-medium text-slate-900">${App.fmt.number(n)}</span>
-          </div>`)
-        .join('');
-    }
-
-    App.loadData('twilio', { notice: '#notice' }).then((data) => table.setData(data));
-  </script>
 </body>
 </html>
